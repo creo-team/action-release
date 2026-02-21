@@ -64358,10 +64358,12 @@ async function run() {
     // ============================================================================
     // 16. Send notifications
     // ============================================================================
-    const hasNotifications = config.notifications.slackWebhook ||
-        config.notifications.discordWebhook ||
-        config.notifications.teamsWebhook ||
-        config.notifications.genericWebhookUrl;
+    const hasNotifications = [
+        config.notifications.slackWebhook,
+        config.notifications.discordWebhook,
+        config.notifications.teamsWebhook,
+        config.notifications.genericWebhookUrl,
+    ].some((w) => Boolean(w));
     if (hasNotifications && releaseResult.created) {
         await (0, notifications_1.sendNotifications)(config.notifications, templateVars);
     }

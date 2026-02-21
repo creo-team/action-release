@@ -458,11 +458,12 @@ async function run(): Promise<void> {
 	// 16. Send notifications
 	// ============================================================================
 
-	const hasNotifications =
-		config.notifications.slackWebhook ||
-		config.notifications.discordWebhook ||
-		config.notifications.teamsWebhook ||
-		config.notifications.genericWebhookUrl
+	const hasNotifications = [
+		config.notifications.slackWebhook,
+		config.notifications.discordWebhook,
+		config.notifications.teamsWebhook,
+		config.notifications.genericWebhookUrl,
+	].some((w) => Boolean(w))
 
 	if (hasNotifications && releaseResult.created) {
 		await sendNotifications(config.notifications, templateVars)
