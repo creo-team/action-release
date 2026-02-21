@@ -1,6 +1,6 @@
 {
   "name": "@creo-team/action-release",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "World-class GitHub Action for automated releases with semantic versioning, LLM-powered release notes, codename generation, and more.",
   "main": "dist/index.js",
   "scripts": {
