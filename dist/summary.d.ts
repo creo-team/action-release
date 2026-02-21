@@ -1,10 +1,10 @@
-import { TemplateVariables } from './types';
+import type { TemplateVariables } from './types';
 export declare function writeStepSummary(variables: TemplateVariables, options: {
-    dryRun: boolean;
-    created: boolean;
-    tags: string[];
     changelog?: string;
-    llmSummary?: string;
     codename?: string;
+    created: boolean;
+    dryRun: boolean;
+    llmSummary?: string;
+    tags: string[];
     uploadedAssets?: string[];
 }): Promise<void>;

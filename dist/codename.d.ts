@@ -1,3 +1,4 @@
-import { CodenameTheme } from './types';
+import type { getOctokit } from '@actions/github';
+import type { CodenameTheme } from './types';
 export declare function generateCodename(theme: CodenameTheme, existingNames: string[], customWords?: string[]): string;
-export declare function getExistingReleaseNames(octokit: ReturnType<typeof import('@actions/github').getOctokit>, owner: string, repo: string): Promise<string[]>;
+export declare function getExistingReleaseNames(octokit: ReturnType<typeof getOctokit>, owner: string, repo: string): Promise<string[]>;

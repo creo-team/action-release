@@ -1,11 +1,11 @@
 interface ParsedCommit {
-    type: string;
-    scope?: string;
-    description: string;
     breaking: boolean;
+    description: string;
     hash?: string;
+    scope?: string;
+    type: string;
 }
-export declare function parseCommitMessage(message: string): ParsedCommit | null;
-export declare function generateChangelog(commitMessages: string[], commitHashes?: string[]): string;
 export declare function formatRawChanges(commitMessages: string[], commitHashes?: string[]): string;
+export declare function generateChangelog(commitMessages: string[], commitHashes?: string[]): string;
+export declare function parseCommitMessage(message: string): null | ParsedCommit;
 export {};

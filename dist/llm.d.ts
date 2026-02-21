@@ -1,16 +1,16 @@
-import { LlmProvider } from './types';
-export interface LlmOptions {
-    provider: LlmProvider;
-    apiKey: string;
-    model?: string;
-    systemPrompt?: string;
-    maxTokens: number;
-}
+import type { LlmProvider } from './types';
 export interface LlmInput {
     commitMessages: string[];
     diff?: string;
-    previousTag: string;
     newTag: string;
+    previousTag: string;
     repo: string;
+}
+export interface LlmOptions {
+    apiKey: string;
+    maxTokens: number;
+    model?: string;
+    provider: LlmProvider;
+    systemPrompt?: string;
 }
 export declare function generateLlmReleaseNotes(options: LlmOptions, input: LlmInput): Promise<string>;

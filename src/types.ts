@@ -2,245 +2,249 @@
 // Bump Types
 // ============================================================================
 
-export type BumpType = 'major' | 'minor' | 'patch' | 'none';
+export type BumpType = 'major' | 'minor' | 'none' | 'patch'
 
 export const BUMP_PRIORITY: Record<BumpType, number> = {
-  major: 3,
-  minor: 2,
-  patch: 1,
-  none: 0,
-};
+	major: 3,
+	minor: 2,
+	none: 0,
+	patch: 1,
+}
 
 // ============================================================================
 // Version
 // ============================================================================
 
 export interface SemVer {
-  major: number;
-  minor: number;
-  patch: number;
-  prerelease?: string;
+	major: number
+	minor: number
+	patch: number
+	prerelease?: string
 }
 
-export type VersionSource = 'auto' | 'package-json' | 'file';
+export type TagStrategy = 'all' | 'full-and-minor' | 'full'
 
 // ============================================================================
 // Tags
 // ============================================================================
 
-export type TagStrategy = 'full' | 'all' | 'full-and-minor';
+export type VersionSource = 'auto' | 'file' | 'package-json'
 
 // ============================================================================
 // Pre-release Channels
 // ============================================================================
 
-export const STABLE_CHANNEL = 'stable';
+export const STABLE_CHANNEL = 'stable'
 
 // ============================================================================
 // Release Controls
 // ============================================================================
 
-export type IfExistsBehavior = 'skip' | 'fail' | 'update';
-export type MakeLatest = 'true' | 'false' | 'legacy';
+export type IfExistsBehavior = 'fail' | 'skip' | 'update'
+export type LlmContext = 'both' | 'commits' | 'diff'
 
 // ============================================================================
 // LLM
 // ============================================================================
 
-export type LlmProvider = 'openai' | 'anthropic' | 'openrouter';
-export type LlmContext = 'commits' | 'diff' | 'both';
+export type LlmProvider = 'anthropic' | 'openai' | 'openrouter'
+export type MakeLatest = 'false' | 'legacy' | 'true'
 
 export const LLM_DEFAULT_MODELS: Record<LlmProvider, string> = {
-  openai: 'gpt-4o-mini',
-  anthropic: 'claude-sonnet-4-20250514',
-  openrouter: 'openai/gpt-4o-mini',
-};
+	anthropic: 'claude-sonnet-4-20250514',
+	openai: 'gpt-4o-mini',
+	openrouter: 'openai/gpt-4o-mini',
+}
 
 export const LLM_ENDPOINTS: Record<LlmProvider, string> = {
-  openai: 'https://api.openai.com/v1/chat/completions',
-  anthropic: 'https://api.anthropic.com/v1/messages',
-  openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-};
+	anthropic: 'https://api.anthropic.com/v1/messages',
+	openai: 'https://api.openai.com/v1/chat/completions',
+	openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+}
 
-export const DEFAULT_LLM_MAX_TOKENS = 1024;
+export const DEFAULT_LLM_MAX_TOKENS = 1024
 
 export const DEFAULT_LLM_PROMPT = `Write release notes from the commit history. Be clear and concise.
 Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
-Put breaking changes first with a brief warning. Professional tone.`;
+Put breaking changes first with a brief warning. Professional tone.`
 
 // ============================================================================
 // Codename Themes
 // ============================================================================
 
-export type CodenameTheme =
-  | 'off'
-  | 'adjective-animal'
-  | 'the-office'
-  | 'planets'
-  | 'mythology'
-  | 'gemstones'
-  | 'ships'
-  | 'custom';
+export interface ActionConfig {
+	appendBody: boolean
+
+	// Release notes
+	body?: string
+	bodyPath?: string
+	bodyTemplate?: string
+	bumpSource: BumpSource
+
+	// Changelog
+	changelog: boolean
+
+	changelogPath: string
+
+	// Channel
+	channel: string
+	codename: CodenameTheme
+	codenameWords?: string[]
+
+	defaultBump: BumpType
+	discussionCategory?: string
+
+	// Release controls
+	draft: boolean
+
+	// Behavior
+	dryRun: boolean
+	failOnUnmatchedFiles: boolean
+
+	// Assets
+	files?: string
+	generateReleaseNotes: boolean
+	ifExists: IfExistsBehavior
+	initialVersion: string
+
+	llmApiKey?: string
+	llmContext: LlmContext
+	llmMaxTokens: number
+	llmModel?: string
+	llmPrompt: string
+
+	llmProvider: LlmProvider
+
+	// LLM
+	llmReleaseNotes: boolean
+
+	// Bump keywords
+	majorKeywords: string[]
+	makeLatest: MakeLatest
+
+	minorKeywords: string[]
+
+	// Release name / codename
+	name?: string
+	nameTemplate?: string
+
+	// Notifications
+	notifications: NotificationConfig
+	overwriteFiles: boolean
+	patchKeywords: string[]
+	prerelease: boolean
+
+	// Previous release
+	previousReleaseStrategy: PreviousReleaseStrategy
+	previousTag?: string
+	tagMatchPattern?: string
+
+	// Tags
+	tagPrefix: string
+	tagStrategy: TagStrategy
+	targetCommitish?: string
+	token: string
+
+	updateChangelog: boolean
+
+	// Version
+	version?: string
+	versionFile?: string
+	versionPattern: string
+
+	versionSource: VersionSource
+	workingDirectory: string
+}
 
 // ============================================================================
 // Bump Source
 // ============================================================================
 
-export type BumpSource = 'commits' | 'pr-title' | 'pr-body' | 'all';
+export interface BumpResult {
+	reason: string
+	type: BumpType
+}
 
 // ============================================================================
 // Previous Release Strategy
 // ============================================================================
 
-export type PreviousReleaseStrategy =
-  | 'latest-release'
-  | 'latest-tag'
-  | 'tag-pattern'
-  | 'specific-tag';
+export type BumpSource = 'all' | 'commits' | 'pr-body' | 'pr-title'
 
 // ============================================================================
 // Notification Providers
 // ============================================================================
 
-export interface NotificationConfig {
-  slackWebhook?: string;
-  discordWebhook?: string;
-  teamsWebhook?: string;
-  genericWebhookUrl?: string;
-  template?: string;
-}
+export type CodenameTheme =
+	| 'adjective-animal'
+	| 'custom'
+	| 'gemstones'
+	| 'mythology'
+	| 'off'
+	| 'planets'
+	| 'ships'
+	| 'the-office'
 
 // ============================================================================
 // Action Config (parsed inputs)
 // ============================================================================
 
-export interface ActionConfig {
-  // Version
-  version?: string;
-  versionSource: VersionSource;
-  versionFile?: string;
-  versionPattern: string;
-  defaultBump: BumpType;
-  initialVersion: string;
-
-  // Bump keywords
-  majorKeywords: string[];
-  minorKeywords: string[];
-  patchKeywords: string[];
-  bumpSource: BumpSource;
-
-  // Tags
-  tagPrefix: string;
-  tagStrategy: TagStrategy;
-
-  // Channel
-  channel: string;
-
-  // Release controls
-  draft: boolean;
-  prerelease: boolean;
-  makeLatest: MakeLatest;
-  targetCommitish?: string;
-  discussionCategory?: string;
-  ifExists: IfExistsBehavior;
-
-  // Release notes
-  body?: string;
-  bodyPath?: string;
-  bodyTemplate?: string;
-  appendBody: boolean;
-  generateReleaseNotes: boolean;
-
-  // Release name / codename
-  name?: string;
-  nameTemplate?: string;
-  codename: CodenameTheme;
-  codenameWords?: string[];
-
-  // Changelog
-  changelog: boolean;
-  updateChangelog: boolean;
-  changelogPath: string;
-
-  // LLM
-  llmReleaseNotes: boolean;
-  llmProvider: LlmProvider;
-  llmApiKey?: string;
-  llmModel?: string;
-  llmPrompt: string;
-  llmMaxTokens: number;
-  llmContext: LlmContext;
-
-  // Assets
-  files?: string;
-  workingDirectory: string;
-  overwriteFiles: boolean;
-  failOnUnmatchedFiles: boolean;
-
-  // Notifications
-  notifications: NotificationConfig;
-
-  // Previous release
-  previousReleaseStrategy: PreviousReleaseStrategy;
-  previousTag?: string;
-  tagMatchPattern?: string;
-
-  // Behavior
-  dryRun: boolean;
-  token: string;
+export interface NotificationConfig {
+	discordWebhook?: string
+	genericWebhookUrl?: string
+	slackWebhook?: string
+	teamsWebhook?: string
+	template?: string
 }
 
 // ============================================================================
 // Template Variables
 // ============================================================================
 
-export interface TemplateVariables {
-  tag: string;
-  version: string;
-  major: string;
-  minor: string;
-  patch: string;
-  commit: string;
-  commit_short: string;
-  previous_tag: string;
-  compare_url: string;
-  changes: string;
-  changelog: string;
-  llm_summary: string;
-  codename: string;
-  date: string;
-  repo: string;
-  owner: string;
-  branch: string;
-  actor: string;
-  release_url: string;
-  release_name: string;
-}
+export type PreviousReleaseStrategy = 'latest-release' | 'latest-tag' | 'specific-tag' | 'tag-pattern'
 
 // ============================================================================
 // Results
 // ============================================================================
 
-export interface BumpResult {
-  type: BumpType;
-  reason: string;
+export interface ReleaseResult {
+	created: boolean
+	id: number
+	tag: string
+	uploadUrl: string
+	url: string
 }
 
-export interface ReleaseResult {
-  id: number;
-  url: string;
-  uploadUrl: string;
-  tag: string;
-  created: boolean;
+export interface TemplateVariables {
+	actor: string
+	branch: string
+	changelog: string
+	changes: string
+	codename: string
+	commit: string
+	commit_short: string
+	compare_url: string
+	date: string
+	llm_summary: string
+	major: string
+	minor: string
+	owner: string
+	patch: string
+	previous_tag: string
+	release_name: string
+	release_url: string
+	repo: string
+	tag: string
+	version: string
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-export const DEFAULT_INITIAL_VERSION = '0.1.0';
-export const DEFAULT_TAG_PREFIX = 'v';
-export const DEFAULT_VERSION_PATTERN = '"version":\\s*"([^"]+)"';
-export const DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md';
-export const SHORT_SHA_LENGTH = 7;
-export const MAX_CODENAME_RETRIES = 50;
+export const DEFAULT_INITIAL_VERSION = '0.1.0'
+export const DEFAULT_TAG_PREFIX = 'v'
+export const DEFAULT_VERSION_PATTERN = '"version":\\s*"([^"]+)"'
+export const DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md'
+export const SHORT_SHA_LENGTH = 7
+export const MAX_CODENAME_RETRIES = 50

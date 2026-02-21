@@ -63406,54 +63406,54 @@ async function uploadAssets(octokit, options) {
 // ============================================================================
 // File Resolution
 // ============================================================================
+async function deleteExistingAssets(octokit, options, newFiles) {
+    const newNames = new Set(newFiles.map((f) => path.basename(f)));
+    const { data: existingAssets } = await octokit.rest.repos.listReleaseAssets({
+        owner: options.owner,
+        release_id: options.releaseId,
+        repo: options.repo,
+    });
+    for (const asset of existingAssets) {
+        if (newNames.has(asset.name)) {
+            await octokit.rest.repos.deleteReleaseAsset({
+                asset_id: asset.id,
+                owner: options.owner,
+                repo: options.repo,
+            });
+            core.info(`  Deleted existing asset: ${asset.name}`);
+        }
+    }
+}
+// ============================================================================
+// Upload
+// ============================================================================
 async function resolveFiles(patterns, workingDirectory) {
     const lines = patterns
         .split('\n')
         .map((l) => l.trim())
         .filter(Boolean);
-    const absolutePatterns = lines.map((p) => path.isAbsolute(p) ? p : path.join(workingDirectory, p));
+    const absolutePatterns = lines.map((p) => (path.isAbsolute(p) ? p : path.join(workingDirectory, p)));
     const globber = await glob.create(absolutePatterns.join('\n'));
     const files = await globber.glob();
     return files.filter((f) => fs.statSync(f).isFile());
 }
 // ============================================================================
-// Upload
+// Delete Existing (for overwrite)
 // ============================================================================
 async function uploadSingleAsset(octokit, options, filePath, name) {
     const data = fs.readFileSync(filePath);
     const size = fs.statSync(filePath).size;
     await octokit.rest.repos.uploadReleaseAsset({
-        owner: options.owner,
-        repo: options.repo,
-        release_id: options.releaseId,
-        name,
         data: data,
         headers: {
-            'content-type': 'application/octet-stream',
             'content-length': size,
+            'content-type': 'application/octet-stream',
         },
-    });
-}
-// ============================================================================
-// Delete Existing (for overwrite)
-// ============================================================================
-async function deleteExistingAssets(octokit, options, newFiles) {
-    const newNames = new Set(newFiles.map((f) => path.basename(f)));
-    const { data: existingAssets } = await octokit.rest.repos.listReleaseAssets({
+        name,
         owner: options.owner,
-        repo: options.repo,
         release_id: options.releaseId,
+        repo: options.repo,
     });
-    for (const asset of existingAssets) {
-        if (newNames.has(asset.name)) {
-            await octokit.rest.repos.deleteReleaseAsset({
-                owner: options.owner,
-                repo: options.repo,
-                asset_id: asset.id,
-            });
-            core.info(`  Deleted existing asset: ${asset.name}`);
-        }
-    }
 }
 
 
@@ -63465,59 +63465,16 @@ async function deleteExistingAssets(octokit, options, newFiles) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.detectBumpFromMessages = detectBumpFromMessages;
 exports.detectConventionalBump = detectConventionalBump;
 exports.detectKeywordBump = detectKeywordBump;
 exports.highestBump = highestBump;
-exports.detectBumpFromMessages = detectBumpFromMessages;
 const types_1 = __nccwpck_require__(8522);
 // ============================================================================
 // Conventional Commit Parsing
 // ============================================================================
 const CONVENTIONAL_COMMIT_REGEX = /^(\w+)(?:\([\w-]+\))?(!)?:\s/;
 const BREAKING_CHANGE_FOOTER = 'BREAKING CHANGE';
-function detectConventionalBump(message) {
-    const match = message.match(CONVENTIONAL_COMMIT_REGEX);
-    if (message.includes(BREAKING_CHANGE_FOOTER))
-        return 'major';
-    if (match?.[2] === '!')
-        return 'major';
-    if (match?.[1] === 'feat')
-        return 'minor';
-    if (match?.[1] === 'fix')
-        return 'patch';
-    return 'none';
-}
-// ============================================================================
-// Keyword Matching
-// ============================================================================
-function detectKeywordBump(text, majorKeywords, minorKeywords, patchKeywords) {
-    const lowerText = text.toLowerCase();
-    for (const keyword of majorKeywords) {
-        if (lowerText.includes(keyword.toLowerCase()))
-            return 'major';
-    }
-    for (const keyword of minorKeywords) {
-        if (lowerText.includes(keyword.toLowerCase()))
-            return 'minor';
-    }
-    for (const keyword of patchKeywords) {
-        if (lowerText.includes(keyword.toLowerCase()))
-            return 'patch';
-    }
-    return 'none';
-}
-// ============================================================================
-// Aggregate Bump Detection
-// ============================================================================
-function highestBump(bumps) {
-    let highest = 'none';
-    for (const bump of bumps) {
-        if (types_1.BUMP_PRIORITY[bump] > types_1.BUMP_PRIORITY[highest]) {
-            highest = bump;
-        }
-    }
-    return highest;
-}
 function detectBumpFromMessages(messages, majorKeywords, minorKeywords, patchKeywords) {
     const bumps = [];
     const reasons = [];
@@ -63536,11 +63493,52 @@ function detectBumpFromMessages(messages, majorKeywords, minorKeywords, patchKey
     }
     const result = highestBump(bumps);
     return {
+        reason: reasons.length > 0 ? reasons.join('; ') : 'no keywords or conventional commits detected',
         type: result,
-        reason: reasons.length > 0
-            ? reasons.join('; ')
-            : 'no keywords or conventional commits detected',
     };
+}
+// ============================================================================
+// Keyword Matching
+// ============================================================================
+function detectConventionalBump(message) {
+    const match = CONVENTIONAL_COMMIT_REGEX.exec(message);
+    if (message.includes(BREAKING_CHANGE_FOOTER))
+        return 'major';
+    if (match?.[2] === '!')
+        return 'major';
+    if (match?.[1] === 'feat')
+        return 'minor';
+    if (match?.[1] === 'fix')
+        return 'patch';
+    return 'none';
+}
+// ============================================================================
+// Aggregate Bump Detection
+// ============================================================================
+function detectKeywordBump(text, majorKeywords, minorKeywords, patchKeywords) {
+    const lowerText = text.toLowerCase();
+    for (const keyword of majorKeywords) {
+        if (lowerText.includes(keyword.toLowerCase()))
+            return 'major';
+    }
+    for (const keyword of minorKeywords) {
+        if (lowerText.includes(keyword.toLowerCase()))
+            return 'minor';
+    }
+    for (const keyword of patchKeywords) {
+        if (lowerText.includes(keyword.toLowerCase()))
+            return 'patch';
+    }
+    return 'none';
+}
+function highestBump(bumps) {
+    let highest = 'none';
+    for (const bump of bumps) {
+        if (types_1.BUMP_PRIORITY[bump] > types_1.BUMP_PRIORITY[highest]) {
+            highest = bump;
+        }
+    }
+    return highest;
 }
 
 
@@ -63585,14 +63583,20 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateChangelogFile = updateChangelogFile;
 exports.formatChangelogEntry = formatChangelogEntry;
+exports.updateChangelogFile = updateChangelogFile;
 const fs = __importStar(__nccwpck_require__(9896));
 // ============================================================================
 // Changelog File Update
 // ============================================================================
 const CHANGELOG_HEADER = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n';
 const CHANGELOG_SEPARATOR = '\n---\n\n';
+function formatChangelogEntry(version, date, content) {
+    return `## [${version}] - ${date}\n\n${content}\n`;
+}
+// ============================================================================
+// Formatting
+// ============================================================================
 function updateChangelogFile(filePath, version, date, changelogContent) {
     const entry = formatChangelogEntry(version, date, changelogContent);
     if (!fs.existsSync(filePath)) {
@@ -63602,12 +63606,6 @@ function updateChangelogFile(filePath, version, date, changelogContent) {
     const existing = fs.readFileSync(filePath, 'utf-8');
     const updated = insertEntry(existing, entry);
     fs.writeFileSync(filePath, updated, 'utf-8');
-}
-// ============================================================================
-// Formatting
-// ============================================================================
-function formatChangelogEntry(version, date, content) {
-    return `## [${version}] - ${date}\n\n${content}\n`;
 }
 function insertEntry(existing, entry) {
     const headerEnd = existing.indexOf('\n## ');
@@ -63631,37 +63629,33 @@ function insertEntry(existing, entry) {
 // Conventional Changelog Generation
 // ============================================================================
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseCommitMessage = parseCommitMessage;
-exports.generateChangelog = generateChangelog;
 exports.formatRawChanges = formatRawChanges;
+exports.generateChangelog = generateChangelog;
+exports.parseCommitMessage = parseCommitMessage;
 const CHANGELOG_SECTIONS = [
-    { title: 'Breaking Changes', emoji: '💥', types: ['breaking'] },
-    { title: 'Features', emoji: '✨', types: ['feat'] },
-    { title: 'Bug Fixes', emoji: '🐛', types: ['fix'] },
-    { title: 'Performance', emoji: '⚡', types: ['perf'] },
-    { title: 'Documentation', emoji: '📚', types: ['docs'] },
-    { title: 'Refactoring', emoji: '♻️', types: ['refactor'] },
-    { title: 'Testing', emoji: '🧪', types: ['test'] },
-    { title: 'Build & CI', emoji: '🏗️', types: ['build', 'ci'] },
-    { title: 'Chores', emoji: '🔧', types: ['chore'] },
-    { title: 'Styles', emoji: '💄', types: ['style'] },
+    { emoji: '💥', title: 'Breaking Changes', types: ['breaking'] },
+    { emoji: '✨', title: 'Features', types: ['feat'] },
+    { emoji: '🐛', title: 'Bug Fixes', types: ['fix'] },
+    { emoji: '⚡', title: 'Performance', types: ['perf'] },
+    { emoji: '📚', title: 'Documentation', types: ['docs'] },
+    { emoji: '♻️', title: 'Refactoring', types: ['refactor'] },
+    { emoji: '🧪', title: 'Testing', types: ['test'] },
+    { emoji: '🏗️', title: 'Build & CI', types: ['build', 'ci'] },
+    { emoji: '🔧', title: 'Chores', types: ['chore'] },
+    { emoji: '💄', title: 'Styles', types: ['style'] },
 ];
 const COMMIT_REGEX = /^(\w+)(?:\(([^)]+)\))?(!)?:\s*(.+)/;
 // ============================================================================
 // Parsing
 // ============================================================================
-function parseCommitMessage(message) {
-    const firstLine = message.split('\n')[0].trim();
-    const match = firstLine.match(COMMIT_REGEX);
-    if (!match)
-        return null;
-    const breaking = match[3] === '!' || message.includes('BREAKING CHANGE');
-    return {
-        type: match[1],
-        scope: match[2],
-        description: match[4],
-        breaking,
-    };
+function formatRawChanges(commitMessages, commitHashes) {
+    return commitMessages
+        .map((msg, i) => {
+        const firstLine = msg.split('\n')[0].trim();
+        const hash = commitHashes?.[i]?.substring(0, 7);
+        return hash ? `- ${firstLine} (${hash})` : `- ${firstLine}`;
+    })
+        .join('\n');
 }
 // ============================================================================
 // Generation
@@ -63709,14 +63703,18 @@ function generateChangelog(commitMessages, commitHashes) {
 // ============================================================================
 // Raw Changes (non-conventional)
 // ============================================================================
-function formatRawChanges(commitMessages, commitHashes) {
-    return commitMessages
-        .map((msg, i) => {
-        const firstLine = msg.split('\n')[0].trim();
-        const hash = commitHashes?.[i]?.substring(0, 7);
-        return hash ? `- ${firstLine} (${hash})` : `- ${firstLine}`;
-    })
-        .join('\n');
+function parseCommitMessage(message) {
+    const firstLine = message.split('\n')[0].trim();
+    const match = COMMIT_REGEX.exec(firstLine);
+    if (!match)
+        return null;
+    const breaking = match[3] === '!' || message.includes('BREAKING CHANGE');
+    return {
+        breaking,
+        description: match[4],
+        scope: match[2],
+        type: match[1],
+    };
 }
 
 
@@ -63743,7 +63741,7 @@ const THE_OFFICE_NAMES = [
     'Dwight Schrute',
     'Scranton Strangler',
     'Dundler Mifflin',
-    'That\'s What She Said',
+    "That's What She Said",
     'Beet Farm',
     'Paper Company',
     'Regional Manager',
@@ -63754,7 +63752,7 @@ const THE_OFFICE_NAMES = [
     'Party Planning Committee',
     'Lazy Scranton',
     'Cafe Disco',
-    'Scott\'s Tots',
+    "Scott's Tots",
     'Golden Ticket',
     'Garage Sale',
     'Fun Run',
@@ -63768,36 +63766,132 @@ const THE_OFFICE_NAMES = [
     'Stanley Nickel',
 ];
 const PLANET_NAMES = [
-    'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn',
-    'Uranus', 'Neptune', 'Pluto', 'Europa', 'Titan',
-    'Callisto', 'Ganymede', 'Io', 'Enceladus', 'Triton',
-    'Ceres', 'Eris', 'Haumea', 'Makemake', 'Sedna',
-    'Kepler', 'Proxima', 'Andromeda', 'Orion', 'Sirius',
-    'Vega', 'Rigel', 'Polaris', 'Arcturus', 'Betelgeuse',
+    'Mercury',
+    'Venus',
+    'Mars',
+    'Jupiter',
+    'Saturn',
+    'Uranus',
+    'Neptune',
+    'Pluto',
+    'Europa',
+    'Titan',
+    'Callisto',
+    'Ganymede',
+    'Io',
+    'Enceladus',
+    'Triton',
+    'Ceres',
+    'Eris',
+    'Haumea',
+    'Makemake',
+    'Sedna',
+    'Kepler',
+    'Proxima',
+    'Andromeda',
+    'Orion',
+    'Sirius',
+    'Vega',
+    'Rigel',
+    'Polaris',
+    'Arcturus',
+    'Betelgeuse',
 ];
 const MYTHOLOGY_NAMES = [
-    'Atlas', 'Phoenix', 'Odin', 'Athena', 'Thor',
-    'Apollo', 'Artemis', 'Hermes', 'Poseidon', 'Hera',
-    'Zeus', 'Loki', 'Freya', 'Ares', 'Hephaestus',
-    'Persephone', 'Demeter', 'Dionysus', 'Helios', 'Selene',
-    'Prometheus', 'Pandora', 'Icarus', 'Medusa', 'Pegasus',
-    'Cerberus', 'Minotaur', 'Valkyrie', 'Fenrir', 'Ragnarok',
+    'Atlas',
+    'Phoenix',
+    'Odin',
+    'Athena',
+    'Thor',
+    'Apollo',
+    'Artemis',
+    'Hermes',
+    'Poseidon',
+    'Hera',
+    'Zeus',
+    'Loki',
+    'Freya',
+    'Ares',
+    'Hephaestus',
+    'Persephone',
+    'Demeter',
+    'Dionysus',
+    'Helios',
+    'Selene',
+    'Prometheus',
+    'Pandora',
+    'Icarus',
+    'Medusa',
+    'Pegasus',
+    'Cerberus',
+    'Minotaur',
+    'Valkyrie',
+    'Fenrir',
+    'Ragnarok',
 ];
 const GEMSTONE_NAMES = [
-    'Obsidian', 'Sapphire', 'Emerald', 'Topaz', 'Ruby',
-    'Diamond', 'Amethyst', 'Opal', 'Jade', 'Garnet',
-    'Onyx', 'Pearl', 'Quartz', 'Turquoise', 'Amber',
-    'Citrine', 'Peridot', 'Moonstone', 'Lapis', 'Malachite',
-    'Agate', 'Jasper', 'Tanzanite', 'Zircon', 'Alexandrite',
-    'Aquamarine', 'Beryl', 'Coral', 'Sunstone', 'Bloodstone',
+    'Obsidian',
+    'Sapphire',
+    'Emerald',
+    'Topaz',
+    'Ruby',
+    'Diamond',
+    'Amethyst',
+    'Opal',
+    'Jade',
+    'Garnet',
+    'Onyx',
+    'Pearl',
+    'Quartz',
+    'Turquoise',
+    'Amber',
+    'Citrine',
+    'Peridot',
+    'Moonstone',
+    'Lapis',
+    'Malachite',
+    'Agate',
+    'Jasper',
+    'Tanzanite',
+    'Zircon',
+    'Alexandrite',
+    'Aquamarine',
+    'Beryl',
+    'Coral',
+    'Sunstone',
+    'Bloodstone',
 ];
 const SHIP_NAMES = [
-    'Endeavour', 'Discovery', 'Intrepid', 'Resolute', 'Defiant',
-    'Enterprise', 'Voyager', 'Challenger', 'Pathfinder', 'Pioneer',
-    'Navigator', 'Vanguard', 'Horizon', 'Expedition', 'Odyssey',
-    'Meridian', 'Constellation', 'Aurora', 'Tempest', 'Sovereign',
-    'Vigilant', 'Relentless', 'Dauntless', 'Valiant', 'Indomitable',
-    'Fortitude', 'Perseverance', 'Endurance', 'Dreadnought', 'Leviathan',
+    'Endeavour',
+    'Discovery',
+    'Intrepid',
+    'Resolute',
+    'Defiant',
+    'Enterprise',
+    'Voyager',
+    'Challenger',
+    'Pathfinder',
+    'Pioneer',
+    'Navigator',
+    'Vanguard',
+    'Horizon',
+    'Expedition',
+    'Odyssey',
+    'Meridian',
+    'Constellation',
+    'Aurora',
+    'Tempest',
+    'Sovereign',
+    'Vigilant',
+    'Relentless',
+    'Dauntless',
+    'Valiant',
+    'Indomitable',
+    'Fortitude',
+    'Perseverance',
+    'Endurance',
+    'Dreadnought',
+    'Leviathan',
 ];
 // ============================================================================
 // Generation
@@ -63816,58 +63910,58 @@ function generateCodename(theme, existingNames, customWords) {
     const fallback = generateCandidate(theme, customWords);
     return `${fallback} ${timestamp}`;
 }
-function generateCandidate(theme, customWords) {
-    switch (theme) {
-        case 'adjective-animal':
-            return generateAdjectiveAnimal();
-        case 'the-office':
-            return pickRandom(THE_OFFICE_NAMES);
-        case 'planets':
-            return pickRandom(PLANET_NAMES);
-        case 'mythology':
-            return pickRandom(MYTHOLOGY_NAMES);
-        case 'gemstones':
-            return pickRandom(GEMSTONE_NAMES);
-        case 'ships':
-            return pickRandom(SHIP_NAMES);
-        case 'custom':
-            return pickRandom(customWords ?? []);
-        case 'off':
-            return '';
-    }
-}
-function generateAdjectiveAnimal() {
-    const name = (0, unique_names_generator_1.uniqueNamesGenerator)({
-        dictionaries: [unique_names_generator_1.adjectives, unique_names_generator_1.colors, unique_names_generator_1.animals],
-        separator: ' ',
-        length: 2,
-        style: 'capital',
-    });
-    return name;
-}
-function pickRandom(list) {
-    if (list.length === 0)
-        return 'Unknown';
-    return list[Math.floor(Math.random() * list.length)];
-}
-// ============================================================================
-// Fetch Existing Release Names
-// ============================================================================
 async function getExistingReleaseNames(octokit, owner, repo) {
     const names = [];
     const PER_PAGE = 100;
     for (let page = 1; page <= 5; page++) {
         const { data } = await octokit.rest.repos.listReleases({
             owner,
-            repo,
-            per_page: PER_PAGE,
             page,
+            per_page: PER_PAGE,
+            repo,
         });
         names.push(...data.map((r) => r.name ?? '').filter(Boolean));
         if (data.length < PER_PAGE)
             break;
     }
     return names;
+}
+function generateAdjectiveAnimal() {
+    const name = (0, unique_names_generator_1.uniqueNamesGenerator)({
+        dictionaries: [unique_names_generator_1.adjectives, unique_names_generator_1.colors, unique_names_generator_1.animals],
+        length: 2,
+        separator: ' ',
+        style: 'capital',
+    });
+    return name;
+}
+function generateCandidate(theme, customWords) {
+    switch (theme) {
+        case 'adjective-animal':
+            return generateAdjectiveAnimal();
+        case 'custom':
+            return pickRandom(customWords ?? []);
+        case 'gemstones':
+            return pickRandom(GEMSTONE_NAMES);
+        case 'mythology':
+            return pickRandom(MYTHOLOGY_NAMES);
+        case 'off':
+            return '';
+        case 'planets':
+            return pickRandom(PLANET_NAMES);
+        case 'ships':
+            return pickRandom(SHIP_NAMES);
+        case 'the-office':
+            return pickRandom(THE_OFFICE_NAMES);
+    }
+}
+// ============================================================================
+// Fetch Existing Release Names
+// ============================================================================
+function pickRandom(list) {
+    if (list.length === 0)
+        return 'Unknown';
+    return list[Math.floor(Math.random() * list.length)];
 }
 
 
@@ -63933,6 +64027,86 @@ const types_1 = __nccwpck_require__(8522);
 // ============================================================================
 // Main
 // ============================================================================
+function collectBumpTexts(bumpSource, messages) {
+    const context = github.context;
+    switch (bumpSource) {
+        case 'all': {
+            const texts = [...messages];
+            const pr = context.payload.pull_request;
+            if (pr?.title)
+                texts.push(pr.title);
+            if (pr?.body)
+                texts.push(pr.body);
+            return texts;
+        }
+        case 'pr-body': {
+            const prBody = context.payload.pull_request?.body;
+            return prBody ? [prBody] : messages;
+        }
+        case 'pr-title': {
+            const prTitle = context.payload.pull_request?.title;
+            return prTitle ? [prTitle] : messages;
+        }
+        default:
+            return messages;
+    }
+}
+// ============================================================================
+// Helpers
+// ============================================================================
+async function getCommitData(octokit, owner, repo, headSha, previousTag, includeDiff) {
+    if (!previousTag) {
+        return { diff: null, hashes: [], messages: [] };
+    }
+    try {
+        const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
+            basehead: `${previousTag}...${headSha}`,
+            owner,
+            repo,
+        });
+        const messages = data.commits.map((c) => c.commit.message);
+        const hashes = data.commits.map((c) => c.sha);
+        let diff = null;
+        if (includeDiff) {
+            const { data: diffData } = await octokit.rest.repos.compareCommitsWithBasehead({
+                basehead: `${previousTag}...${headSha}`,
+                mediaType: { format: 'diff' },
+                owner,
+                repo,
+            });
+            diff = diffData;
+        }
+        return { diff, hashes, messages };
+    }
+    catch {
+        core.warning(`Could not compare ${previousTag}...${headSha}`);
+        return { diff: null, hashes: [], messages: [] };
+    }
+}
+async function getNextChannelNumber(octokit, owner, repo, version, channel, prefix) {
+    const pattern = `${prefix}${version.major}.${version.minor}.${version.patch}-${channel}.`;
+    try {
+        const { data: tags } = await octokit.rest.repos.listTags({
+            owner,
+            per_page: 100,
+            repo,
+        });
+        let highest = 0;
+        for (const tag of tags) {
+            if (tag.name.startsWith(pattern)) {
+                const numStr = tag.name.substring(pattern.length);
+                const num = parseInt(numStr, 10);
+                if (!isNaN(num) && num > highest) {
+                    highest = num;
+                }
+            }
+        }
+        return highest + 1;
+    }
+    catch {
+        return 1;
+    }
+}
 async function run() {
     const config = (0, inputs_1.parseInputs)();
     const octokit = github.getOctokit(config.token);
@@ -63942,15 +64116,15 @@ async function run() {
     // 1. Find previous release
     // ============================================================================
     const previousTag = await (0, previous_release_1.findPreviousTag)(octokit, owner, repo, config.previousReleaseStrategy, {
-        specificTag: config.previousTag,
         matchPattern: config.tagMatchPattern,
+        specificTag: config.previousTag,
         tagPrefix: config.tagPrefix,
     });
     core.info(previousTag ? `Previous tag: ${previousTag}` : 'No previous tag found');
     // ============================================================================
     // 2. Collect commits since previous tag
     // ============================================================================
-    const { messages, hashes, diff } = await getCommitData(octokit, owner, repo, sha, previousTag, config.llmContext === 'diff' || config.llmContext === 'both');
+    const { diff, hashes, messages } = await getCommitData(octokit, owner, repo, sha, previousTag, config.llmContext === 'diff' || config.llmContext === 'both');
     // ============================================================================
     // 3. Resolve version
     // ============================================================================
@@ -63963,16 +64137,6 @@ async function run() {
     }
     else
         switch (config.versionSource) {
-            case 'package-json': {
-                const versionStr = (0, version_1.readVersionFromPackageJson)('package.json');
-                version = (0, version_1.parseSemVer)(versionStr);
-                break;
-            }
-            case 'file': {
-                const versionStr = (0, version_1.readVersionFromFile)(config.versionFile, config.versionPattern);
-                version = (0, version_1.parseSemVer)(versionStr);
-                break;
-            }
             case 'auto': {
                 if (!previousTag) {
                     version = (0, version_1.parseSemVer)(config.initialVersion);
@@ -63996,6 +64160,16 @@ async function run() {
                 }
                 break;
             }
+            case 'file': {
+                const versionStr = (0, version_1.readVersionFromFile)(config.versionFile, config.versionPattern);
+                version = (0, version_1.parseSemVer)(versionStr);
+                break;
+            }
+            case 'package-json': {
+                const versionStr = (0, version_1.readVersionFromPackageJson)('package.json');
+                version = (0, version_1.parseSemVer)(versionStr);
+                break;
+            }
         }
     // ============================================================================
     // 4. Apply channel (pre-release)
@@ -64012,9 +64186,7 @@ async function run() {
     // ============================================================================
     // 5. Generate changelog
     // ============================================================================
-    const changelogMd = config.changelog
-        ? (0, changelog_1.generateChangelog)(messages, hashes)
-        : '';
+    const changelogMd = config.changelog ? (0, changelog_1.generateChangelog)(messages, hashes) : '';
     const rawChanges = (0, changelog_1.formatRawChanges)(messages, hashes);
     // ============================================================================
     // 6. Generate codename
@@ -64031,51 +64203,49 @@ async function run() {
     let llmSummary = '';
     if (config.llmReleaseNotes && config.llmApiKey) {
         llmSummary = await (0, llm_1.generateLlmReleaseNotes)({
-            provider: config.llmProvider,
             apiKey: config.llmApiKey,
-            model: config.llmModel,
-            systemPrompt: config.llmPrompt,
             maxTokens: config.llmMaxTokens,
+            model: config.llmModel,
+            provider: config.llmProvider,
+            systemPrompt: config.llmPrompt,
         }, {
             commitMessages: messages,
             diff: diff ?? undefined,
-            previousTag: previousTag ?? '',
             newTag: primaryTag,
+            previousTag: previousTag ?? '',
             repo: `${owner}/${repo}`,
         });
     }
     // ============================================================================
     // 8. Build template variables
     // ============================================================================
-    const compareUrl = previousTag
-        ? (0, tags_1.buildCompareUrl)(owner, repo, previousTag, primaryTag)
-        : '';
+    const compareUrl = previousTag ? (0, tags_1.buildCompareUrl)(owner, repo, previousTag, primaryTag) : '';
     const templateVars = (0, template_1.buildTemplateVariables)({
-        tag: primaryTag,
-        version: versionStr,
-        major: String(version.major),
-        minor: String(version.minor),
-        patch: String(version.patch),
+        actor: github.context.actor,
+        branch: github.context.ref.replace('refs/heads/', ''),
+        changelog: changelogMd,
+        changes: rawChanges,
+        codename,
         commit: sha,
         commit_short: sha.substring(0, types_1.SHORT_SHA_LENGTH),
-        previous_tag: previousTag ?? '',
         compare_url: compareUrl,
-        changes: rawChanges,
-        changelog: changelogMd,
-        llm_summary: llmSummary,
-        codename,
         date: new Date().toISOString().split('T')[0],
-        repo: `${owner}/${repo}`,
+        llm_summary: llmSummary,
+        major: String(version.major),
+        minor: String(version.minor),
         owner,
-        branch: github.context.ref.replace('refs/heads/', ''),
-        actor: github.context.actor,
-        release_url: '',
+        patch: String(version.patch),
+        previous_tag: previousTag ?? '',
         release_name: '',
+        release_url: '',
+        repo: `${owner}/${repo}`,
+        tag: primaryTag,
+        version: versionStr,
     });
     // ============================================================================
     // 9. Build release body
     // ============================================================================
-    const DEFAULT_BODY_TEMPLATE = '## What\'s Changed\n\n{{changelog}}\n\n**Full Changelog**: {{compare_url}}';
+    const DEFAULT_BODY_TEMPLATE = "## What's Changed\n\n{{changelog}}\n\n**Full Changelog**: {{compare_url}}";
     let body = '';
     if (config.bodyTemplate) {
         body = (0, template_1.renderTemplate)(config.bodyTemplate, templateVars);
@@ -64111,12 +64281,12 @@ async function run() {
         core.info('Dry run — no tags or releases will be created');
         setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, true, false);
         await (0, summary_1.writeStepSummary)(templateVars, {
-            dryRun: true,
-            created: false,
-            tags,
             changelog: changelogMd || undefined,
-            llmSummary: llmSummary || undefined,
             codename: codename || undefined,
+            created: false,
+            dryRun: true,
+            llmSummary: llmSummary || undefined,
+            tags,
         });
         return;
     }
@@ -64130,18 +64300,18 @@ async function run() {
     // 13. Create release
     // ============================================================================
     const releaseResult = await (0, release_1.createRelease)(octokit, {
-        owner,
-        repo,
-        tag: primaryTag,
-        name: releaseName,
         body,
-        draft: config.draft,
-        prerelease: config.prerelease,
-        makeLatest: config.makeLatest,
-        targetCommitish: config.targetCommitish,
         discussionCategory: config.discussionCategory,
+        draft: config.draft,
         generateReleaseNotes: config.generateReleaseNotes,
         ifExists: config.ifExists,
+        makeLatest: config.makeLatest,
+        name: releaseName,
+        owner,
+        prerelease: config.prerelease,
+        repo,
+        tag: primaryTag,
+        targetCommitish: config.targetCommitish,
     });
     templateVars.release_url = releaseResult.url;
     // ============================================================================
@@ -64150,13 +64320,13 @@ async function run() {
     let uploadedAssets = [];
     if (config.files) {
         uploadedAssets = await (0, assets_1.uploadAssets)(octokit, {
-            owner,
-            repo,
-            releaseId: releaseResult.id,
-            patterns: config.files,
-            workingDirectory: config.workingDirectory,
-            overwrite: config.overwriteFiles,
             failOnUnmatched: config.failOnUnmatchedFiles,
+            overwrite: config.overwriteFiles,
+            owner,
+            patterns: config.files,
+            releaseId: releaseResult.id,
+            repo,
+            workingDirectory: config.workingDirectory,
         });
     }
     // ============================================================================
@@ -64181,98 +64351,18 @@ async function run() {
     // 17. Write step summary
     // ============================================================================
     await (0, summary_1.writeStepSummary)(templateVars, {
-        dryRun: false,
-        created: releaseResult.created,
-        tags,
         changelog: changelogMd || undefined,
-        llmSummary: llmSummary || undefined,
         codename: codename || undefined,
+        created: releaseResult.created,
+        dryRun: false,
+        llmSummary: llmSummary || undefined,
+        tags,
         uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
     });
     // ============================================================================
     // 18. Set outputs
     // ============================================================================
     setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, false, releaseResult.created, releaseResult.url, releaseResult.id, releaseResult.uploadUrl);
-}
-// ============================================================================
-// Helpers
-// ============================================================================
-function collectBumpTexts(bumpSource, messages) {
-    const context = github.context;
-    switch (bumpSource) {
-        case 'pr-title': {
-            const prTitle = context.payload.pull_request?.title;
-            return prTitle ? [prTitle] : messages;
-        }
-        case 'pr-body': {
-            const prBody = context.payload.pull_request?.body;
-            return prBody ? [prBody] : messages;
-        }
-        case 'all': {
-            const texts = [...messages];
-            const pr = context.payload.pull_request;
-            if (pr?.title)
-                texts.push(pr.title);
-            if (pr?.body)
-                texts.push(pr.body);
-            return texts;
-        }
-        default:
-            return messages;
-    }
-}
-async function getCommitData(octokit, owner, repo, headSha, previousTag, includeDiff) {
-    if (!previousTag) {
-        return { messages: [], hashes: [], diff: null };
-    }
-    try {
-        const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
-            owner,
-            repo,
-            basehead: `${previousTag}...${headSha}`,
-        });
-        const messages = data.commits.map((c) => c.commit.message);
-        const hashes = data.commits.map((c) => c.sha);
-        let diff = null;
-        if (includeDiff) {
-            const { data: diffData } = await octokit.rest.repos.compareCommitsWithBasehead({
-                owner,
-                repo,
-                basehead: `${previousTag}...${headSha}`,
-                mediaType: { format: 'diff' },
-            });
-            diff = diffData;
-        }
-        return { messages, hashes, diff };
-    }
-    catch {
-        core.warning(`Could not compare ${previousTag}...${headSha}`);
-        return { messages: [], hashes: [], diff: null };
-    }
-}
-async function getNextChannelNumber(octokit, owner, repo, version, channel, prefix) {
-    const pattern = `${prefix}${version.major}.${version.minor}.${version.patch}-${channel}.`;
-    try {
-        const { data: tags } = await octokit.rest.repos.listTags({
-            owner,
-            repo,
-            per_page: 100,
-        });
-        let highest = 0;
-        for (const tag of tags) {
-            if (tag.name.startsWith(pattern)) {
-                const numStr = tag.name.substring(pattern.length);
-                const num = parseInt(numStr, 10);
-                if (!isNaN(num) && num > highest) {
-                    highest = num;
-                }
-            }
-        }
-        return highest + 1;
-    }
-    catch {
-        return 1;
-    }
 }
 function setOutputs(tag, version, semver, tags, previousTag, compareUrl, codename, releaseName, changelog, llmSummary, body, dryRun, created, url, id, uploadUrl) {
     core.setOutput('tag', tag);
@@ -64356,14 +64446,14 @@ const types_1 = __nccwpck_require__(8522);
 // ============================================================================
 // Helpers
 // ============================================================================
+function parseBool(value) {
+    return value.toLowerCase() === 'true';
+}
 function parseCommaSeparated(value) {
     return value
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-}
-function parseBool(value) {
-    return value.toLowerCase() === 'true';
 }
 function parseOptional(value) {
     return value.trim() || undefined;
@@ -64372,34 +64462,19 @@ function parseWordsInput(value) {
     const trimmed = value.trim();
     if (!trimmed)
         return undefined;
-    const words = trimmed.includes('\n')
-        ? trimmed.split('\n')
-        : trimmed.split(',');
+    const words = trimmed.includes('\n') ? trimmed.split('\n') : trimmed.split(',');
     return words.map((w) => w.trim()).filter(Boolean);
 }
 // ============================================================================
 // Validation
 // ============================================================================
-const VALID_VERSION_SOURCES = [
-    'auto',
-    'package-json',
-    'file',
-];
+const VALID_VERSION_SOURCES = ['auto', 'package-json', 'file'];
 const VALID_BUMP_TYPES = ['major', 'minor', 'patch', 'none'];
-const VALID_BUMP_SOURCES = [
-    'commits',
-    'pr-title',
-    'pr-body',
-    'all',
-];
+const VALID_BUMP_SOURCES = ['commits', 'pr-title', 'pr-body', 'all'];
 const VALID_TAG_STRATEGIES = ['full', 'all', 'full-and-minor'];
 const VALID_IF_EXISTS = ['skip', 'fail', 'update'];
 const VALID_MAKE_LATEST = ['true', 'false', 'legacy'];
-const VALID_LLM_PROVIDERS = [
-    'openai',
-    'anthropic',
-    'openrouter',
-];
+const VALID_LLM_PROVIDERS = ['openai', 'anthropic', 'openrouter'];
 const VALID_LLM_CONTEXTS = ['commits', 'diff', 'both'];
 const VALID_PREVIOUS_STRATEGIES = [
     'latest-release',
@@ -64417,16 +64492,6 @@ const VALID_CODENAME_THEMES = [
     'ships',
     'custom',
 ];
-function validateEnum(value, valid, inputName) {
-    const lower = value.toLowerCase().trim();
-    if (!valid.includes(lower)) {
-        throw new Error(`Invalid value "${value}" for ${inputName}. Must be one of: ${valid.join(', ')}`);
-    }
-    return lower;
-}
-// ============================================================================
-// Parse Inputs
-// ============================================================================
 function parseInputs() {
     const versionSource = validateEnum(core.getInput('version-source'), VALID_VERSION_SOURCES, 'version-source');
     const defaultBump = validateEnum(core.getInput('default-bump'), VALID_BUMP_TYPES, 'default-bump');
@@ -64450,68 +64515,76 @@ function parseInputs() {
         throw new Error('codename is "custom" but no codename-words input was provided.');
     }
     const llmMaxTokensRaw = core.getInput('llm-max-tokens');
-    const llmMaxTokens = llmMaxTokensRaw
-        ? parseInt(llmMaxTokensRaw, 10)
-        : types_1.DEFAULT_LLM_MAX_TOKENS;
+    const llmMaxTokens = llmMaxTokensRaw ? parseInt(llmMaxTokensRaw, 10) : types_1.DEFAULT_LLM_MAX_TOKENS;
     if (isNaN(llmMaxTokens) || llmMaxTokens <= 0) {
         throw new Error(`Invalid llm-max-tokens: "${llmMaxTokensRaw}". Must be a positive integer.`);
     }
     return {
-        version: parseOptional(core.getInput('version')),
-        versionSource,
-        versionFile: parseOptional(core.getInput('version-file')),
-        versionPattern: core.getInput('version-pattern') || types_1.DEFAULT_VERSION_PATTERN,
-        defaultBump,
-        initialVersion: core.getInput('initial-version') || types_1.DEFAULT_INITIAL_VERSION,
-        majorKeywords: parseCommaSeparated(core.getInput('major-keywords') || 'BREAKING CHANGE,major,!:'),
-        minorKeywords: parseCommaSeparated(core.getInput('minor-keywords') || 'feat,feature,minor'),
-        patchKeywords: parseCommaSeparated(core.getInput('patch-keywords') || 'fix,bug,patch,chore,refactor'),
-        bumpSource,
-        tagPrefix: core.getInput('tag-prefix') ?? types_1.DEFAULT_TAG_PREFIX,
-        tagStrategy,
-        channel,
-        draft: parseBool(core.getInput('draft')),
-        prerelease: parseBool(core.getInput('prerelease')) || channel !== types_1.STABLE_CHANNEL,
-        makeLatest,
-        targetCommitish: parseOptional(core.getInput('target-commitish')),
-        discussionCategory: parseOptional(core.getInput('discussion-category')),
-        ifExists,
+        appendBody: parseBool(core.getInput('append-body')),
         body: parseOptional(core.getInput('body')),
         bodyPath: parseOptional(core.getInput('body-path')),
         bodyTemplate: parseOptional(core.getInput('body-template')),
-        appendBody: parseBool(core.getInput('append-body')),
-        generateReleaseNotes: parseBool(core.getInput('generate-release-notes')),
-        name: parseOptional(core.getInput('name')),
-        nameTemplate: parseOptional(core.getInput('name-template')),
+        bumpSource,
+        changelog: parseBool(core.getInput('changelog')),
+        changelogPath: core.getInput('changelog-path') || types_1.DEFAULT_CHANGELOG_PATH,
+        channel,
         codename,
         codenameWords: parseWordsInput(core.getInput('codename-words')),
-        changelog: parseBool(core.getInput('changelog')),
-        updateChangelog: parseBool(core.getInput('update-changelog')),
-        changelogPath: core.getInput('changelog-path') || types_1.DEFAULT_CHANGELOG_PATH,
-        llmReleaseNotes,
-        llmProvider,
+        defaultBump,
+        discussionCategory: parseOptional(core.getInput('discussion-category')),
+        draft: parseBool(core.getInput('draft')),
+        dryRun: parseBool(core.getInput('dry-run')),
+        failOnUnmatchedFiles: parseBool(core.getInput('fail-on-unmatched-files')),
+        files: parseOptional(core.getInput('files')),
+        generateReleaseNotes: parseBool(core.getInput('generate-release-notes')),
+        ifExists,
+        initialVersion: core.getInput('initial-version') || types_1.DEFAULT_INITIAL_VERSION,
         llmApiKey: parseOptional(core.getInput('llm-api-key')),
+        llmContext,
+        llmMaxTokens,
         llmModel: parseOptional(core.getInput('llm-model')),
         llmPrompt: core.getInput('llm-prompt') || types_1.DEFAULT_LLM_PROMPT,
-        llmMaxTokens,
-        llmContext,
-        files: parseOptional(core.getInput('files')),
-        workingDirectory: core.getInput('working-directory') || '.',
-        overwriteFiles: parseBool(core.getInput('overwrite-files') || 'true'),
-        failOnUnmatchedFiles: parseBool(core.getInput('fail-on-unmatched-files')),
+        llmProvider,
+        llmReleaseNotes,
+        majorKeywords: parseCommaSeparated(core.getInput('major-keywords') || 'BREAKING CHANGE,major,!:'),
+        makeLatest,
+        minorKeywords: parseCommaSeparated(core.getInput('minor-keywords') || 'feat,feature,minor'),
+        name: parseOptional(core.getInput('name')),
+        nameTemplate: parseOptional(core.getInput('name-template')),
         notifications: {
-            slackWebhook: parseOptional(core.getInput('slack-webhook')),
             discordWebhook: parseOptional(core.getInput('discord-webhook')),
-            teamsWebhook: parseOptional(core.getInput('teams-webhook')),
             genericWebhookUrl: parseOptional(core.getInput('webhook-url')),
+            slackWebhook: parseOptional(core.getInput('slack-webhook')),
+            teamsWebhook: parseOptional(core.getInput('teams-webhook')),
             template: parseOptional(core.getInput('notification-template')),
         },
+        overwriteFiles: parseBool(core.getInput('overwrite-files') || 'true'),
+        patchKeywords: parseCommaSeparated(core.getInput('patch-keywords') || 'fix,bug,patch,chore,refactor'),
+        prerelease: parseBool(core.getInput('prerelease')) || channel !== types_1.STABLE_CHANNEL,
         previousReleaseStrategy,
         previousTag: parseOptional(core.getInput('previous-tag')),
         tagMatchPattern: parseOptional(core.getInput('tag-match-pattern')),
-        dryRun: parseBool(core.getInput('dry-run')),
+        tagPrefix: core.getInput('tag-prefix') ?? types_1.DEFAULT_TAG_PREFIX,
+        tagStrategy,
+        targetCommitish: parseOptional(core.getInput('target-commitish')),
         token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
+        updateChangelog: parseBool(core.getInput('update-changelog')),
+        version: parseOptional(core.getInput('version')),
+        versionFile: parseOptional(core.getInput('version-file')),
+        versionPattern: core.getInput('version-pattern') || types_1.DEFAULT_VERSION_PATTERN,
+        versionSource,
+        workingDirectory: core.getInput('working-directory') || '.',
     };
+}
+// ============================================================================
+// Parse Inputs
+// ============================================================================
+function validateEnum(value, valid, inputName) {
+    const lower = value.toLowerCase().trim();
+    if (!valid.includes(lower)) {
+        throw new Error(`Invalid value "${value}" for ${inputName}. Must be one of: ${valid.join(', ')}`);
+    }
+    return lower;
 }
 
 
@@ -64569,11 +64642,11 @@ async function generateLlmReleaseNotes(options, input) {
     core.info(`Generating LLM release notes with ${options.provider} (${model})`);
     try {
         switch (options.provider) {
+            case 'anthropic':
+                return await callAnthropic(options.apiKey, model, systemPrompt, userPrompt, options.maxTokens);
             case 'openai':
             case 'openrouter':
                 return await callOpenAICompatible(types_1.LLM_ENDPOINTS[options.provider], options.apiKey, model, systemPrompt, userPrompt, options.maxTokens, options.provider);
-            case 'anthropic':
-                return await callAnthropic(options.apiKey, model, systemPrompt, userPrompt, options.maxTokens);
         }
     }
     catch (error) {
@@ -64608,61 +64681,22 @@ function buildUserPrompt(input) {
     return parts.join('\n');
 }
 const MAX_DIFF_CHARS = 12000;
-function truncateDiff(diff) {
-    if (diff.length <= MAX_DIFF_CHARS)
-        return diff;
-    return (diff.substring(0, MAX_DIFF_CHARS) +
-        '\n\n... (diff truncated for token limits)');
-}
-async function callOpenAICompatible(endpoint, apiKey, model, systemPrompt, userPrompt, maxTokens, provider) {
-    const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-    };
-    if (provider === 'openrouter') {
-        headers['HTTP-Referer'] = 'https://github.com/creo-team/action-release';
-        headers['X-Title'] = 'action-release';
-    }
-    const body = JSON.stringify({
-        model,
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.3,
-    });
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body,
-    });
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`${provider} API error (${response.status}): ${text}`);
-    }
-    const data = (await response.json());
-    if (data.error?.message) {
-        throw new Error(`${provider} API error: ${data.error.message}`);
-    }
-    return data.choices?.[0]?.message?.content?.trim() ?? '';
-}
 async function callAnthropic(apiKey, model, systemPrompt, userPrompt, maxTokens) {
     const body = JSON.stringify({
+        max_tokens: maxTokens,
+        messages: [{ content: userPrompt, role: 'user' }],
         model,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-        max_tokens: maxTokens,
         temperature: 0.3,
     });
     const response = await fetch(types_1.LLM_ENDPOINTS.anthropic, {
-        method: 'POST',
+        body,
         headers: {
+            'anthropic-version': '2023-06-01',
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
         },
-        body,
+        method: 'POST',
     });
     if (!response.ok) {
         const text = await response.text();
@@ -64674,6 +64708,47 @@ async function callAnthropic(apiKey, model, systemPrompt, userPrompt, maxTokens)
     }
     const textBlock = data.content?.find((c) => c.type === 'text');
     return textBlock?.text?.trim() ?? '';
+}
+// ============================================================================
+// Anthropic API
+// ============================================================================
+async function callOpenAICompatible(endpoint, apiKey, model, systemPrompt, userPrompt, maxTokens, provider) {
+    const headers = {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+    };
+    if (provider === 'openrouter') {
+        headers['HTTP-Referer'] = 'https://github.com/creo-team/action-release';
+        headers['X-Title'] = 'action-release';
+    }
+    const body = JSON.stringify({
+        max_tokens: maxTokens,
+        messages: [
+            { content: systemPrompt, role: 'system' },
+            { content: userPrompt, role: 'user' },
+        ],
+        model,
+        temperature: 0.3,
+    });
+    const response = await fetch(endpoint, {
+        body,
+        headers,
+        method: 'POST',
+    });
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${provider} API error (${response.status}): ${text}`);
+    }
+    const data = (await response.json());
+    if (data.error?.message) {
+        throw new Error(`${provider} API error: ${data.error.message}`);
+    }
+    return data.choices?.[0]?.message?.content?.trim() ?? '';
+}
+function truncateDiff(diff) {
+    if (diff.length <= MAX_DIFF_CHARS)
+        return diff;
+    return diff.substring(0, MAX_DIFF_CHARS) + '\n\n... (diff truncated for token limits)';
 }
 
 
@@ -64751,29 +64826,16 @@ async function sendNotifications(config, variables) {
 // ============================================================================
 // Slack
 // ============================================================================
-async function sendSlack(webhookUrl, message, variables) {
-    const payload = {
-        text: message,
-        blocks: [
-            {
-                type: 'section',
-                text: {
-                    type: 'mrkdwn',
-                    text: message,
-                },
-            },
-            {
-                type: 'context',
-                elements: [
-                    {
-                        type: 'mrkdwn',
-                        text: `<${variables.compare_url}|View changes> | <${variables.release_url}|Release page>`,
-                    },
-                ],
-            },
-        ],
-    };
-    await postWebhook(webhookUrl, payload, 'Slack');
+async function postWebhook(url, payload, provider) {
+    const response = await fetch(url, {
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+    });
+    if (!response.ok) {
+        throw new Error(`${provider} webhook failed (${response.status}): ${await response.text()}`);
+    }
+    core.info(`${provider} notification sent`);
 }
 // ============================================================================
 // Discord
@@ -64783,14 +64845,14 @@ async function sendDiscord(webhookUrl, message, variables) {
         content: message,
         embeds: [
             {
-                title: `${variables.repo} ${variables.tag}`,
-                url: variables.release_url,
-                description: variables.changelog || variables.changes || undefined,
                 color: 3447003,
+                description: variables.changelog || variables.changes || undefined,
                 footer: {
                     text: `Released by ${variables.actor}`,
                 },
                 timestamp: new Date().toISOString(),
+                title: `${variables.repo} ${variables.tag}`,
+                url: variables.release_url,
             },
         ],
     };
@@ -64799,18 +64861,43 @@ async function sendDiscord(webhookUrl, message, variables) {
 // ============================================================================
 // Microsoft Teams
 // ============================================================================
-async function sendTeams(webhookUrl, message, variables) {
+async function sendGenericWebhook(url, variables) {
+    await postWebhook(url, variables, 'Generic webhook');
+}
+// ============================================================================
+// Generic Webhook
+// ============================================================================
+async function sendSlack(webhookUrl, message, variables) {
     const payload = {
-        '@type': 'MessageCard',
-        '@context': 'http://schema.org/extensions',
-        summary: `${variables.repo} ${variables.tag} released`,
-        themeColor: '0076D7',
-        title: `${variables.repo} ${variables.tag}`,
-        sections: [
+        blocks: [
             {
-                text: message,
+                text: {
+                    text: message,
+                    type: 'mrkdwn',
+                },
+                type: 'section',
+            },
+            {
+                elements: [
+                    {
+                        text: `<${variables.compare_url}|View changes> | <${variables.release_url}|Release page>`,
+                        type: 'mrkdwn',
+                    },
+                ],
+                type: 'context',
             },
         ],
+        text: message,
+    };
+    await postWebhook(webhookUrl, payload, 'Slack');
+}
+// ============================================================================
+// HTTP Post
+// ============================================================================
+async function sendTeams(webhookUrl, message, variables) {
+    const payload = {
+        '@context': 'http://schema.org/extensions',
+        '@type': 'MessageCard',
         potentialAction: [
             {
                 '@type': 'OpenUri',
@@ -64823,28 +64910,16 @@ async function sendTeams(webhookUrl, message, variables) {
                 targets: [{ os: 'default', uri: variables.compare_url }],
             },
         ],
+        sections: [
+            {
+                text: message,
+            },
+        ],
+        summary: `${variables.repo} ${variables.tag} released`,
+        themeColor: '0076D7',
+        title: `${variables.repo} ${variables.tag}`,
     };
     await postWebhook(webhookUrl, payload, 'Teams');
-}
-// ============================================================================
-// Generic Webhook
-// ============================================================================
-async function sendGenericWebhook(url, variables) {
-    await postWebhook(url, variables, 'Generic webhook');
-}
-// ============================================================================
-// HTTP Post
-// ============================================================================
-async function postWebhook(url, payload, provider) {
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-        throw new Error(`${provider} webhook failed (${response.status}): ${await response.text()}`);
-    }
-    core.info(`${provider} notification sent`);
 }
 
 
@@ -64860,12 +64935,12 @@ exports.findPreviousTag = findPreviousTag;
 const version_1 = __nccwpck_require__(311);
 async function findPreviousTag(octokit, owner, repo, strategy, options = {}) {
     switch (strategy) {
-        case 'specific-tag':
-            return options.specificTag ?? null;
         case 'latest-release':
             return findLatestRelease(octokit, owner, repo);
         case 'latest-tag':
             return findLatestSemVerTag(octokit, owner, repo, options.tagPrefix);
+        case 'specific-tag':
+            return options.specificTag ?? null;
         case 'tag-pattern':
             return findTagByPattern(octokit, owner, repo, options.matchPattern ?? '*');
     }
@@ -64891,7 +64966,7 @@ async function findLatestSemVerTag(octokit, owner, repo, prefix) {
         .map((tag) => {
         const versionStr = prefix ? tag.replace(prefix, '') : tag;
         const parsed = (0, version_1.parseSemVer)(versionStr);
-        return parsed ? { tag, parsed } : null;
+        return parsed ? { parsed, tag } : null;
     })
         .filter((item) => item !== null && !item.parsed.prerelease);
     if (semverTags.length === 0)
@@ -64908,7 +64983,7 @@ async function findTagByPattern(octokit, owner, repo, pattern) {
     const semverMatches = matching
         .map((tag) => {
         const parsed = (0, version_1.parseSemVer)(tag.replace(/^v/, ''));
-        return parsed ? { tag, parsed } : null;
+        return parsed ? { parsed, tag } : null;
     })
         .filter((item) => item !== null);
     if (semverMatches.length > 0) {
@@ -64920,28 +64995,28 @@ async function findTagByPattern(octokit, owner, repo, pattern) {
 // ============================================================================
 // Helpers
 // ============================================================================
-async function listTags(octokit, owner, repo) {
-    const tags = [];
-    const PER_PAGE = 100;
-    for (let page = 1; page <= 10; page++) {
-        const { data } = await octokit.rest.repos.listTags({
-            owner,
-            repo,
-            per_page: PER_PAGE,
-            page,
-        });
-        tags.push(...data.map((t) => t.name));
-        if (data.length < PER_PAGE)
-            break;
-    }
-    return tags;
-}
 function globToRegex(pattern) {
     const escaped = pattern
         .replace(/[.+^${}()|[\]\\]/g, '\\$&')
         .replace(/\*/g, '.*')
         .replace(/\?/g, '.');
     return new RegExp(`^${escaped}$`);
+}
+async function listTags(octokit, owner, repo) {
+    const tags = [];
+    const PER_PAGE = 100;
+    for (let page = 1; page <= 10; page++) {
+        const { data } = await octokit.rest.repos.listTags({
+            owner,
+            page,
+            per_page: PER_PAGE,
+            repo,
+        });
+        tags.push(...data.map((t) => t.name));
+        if (data.length < PER_PAGE)
+            break;
+    }
+    return tags;
 }
 
 
@@ -64990,7 +65065,7 @@ exports.createRelease = createRelease;
 exports.createOrUpdateTag = createOrUpdateTag;
 const core = __importStar(__nccwpck_require__(7484));
 // ============================================================================
-// Create Release
+// Create New
 // ============================================================================
 async function createRelease(octokit, options) {
     const existing = await findExistingRelease(octokit, options.owner, options.repo, options.tag);
@@ -65000,65 +65075,31 @@ async function createRelease(octokit, options) {
     return createNewRelease(octokit, options);
 }
 // ============================================================================
-// Create New
+// Handle Existing
 // ============================================================================
 async function createNewRelease(octokit, options) {
     core.info(`Creating release ${options.tag}`);
     const { data } = await octokit.rest.repos.createRelease({
+        body: options.body,
+        discussion_category_name: options.discussionCategory,
+        draft: options.draft,
+        generate_release_notes: options.generateReleaseNotes,
+        make_latest: options.makeLatest,
+        name: options.name,
         owner: options.owner,
+        prerelease: options.prerelease,
         repo: options.repo,
         tag_name: options.tag,
-        name: options.name,
-        body: options.body,
-        draft: options.draft,
-        prerelease: options.prerelease,
-        make_latest: options.makeLatest,
         target_commitish: options.targetCommitish,
-        discussion_category_name: options.discussionCategory,
-        generate_release_notes: options.generateReleaseNotes,
     });
     return {
-        id: data.id,
-        url: data.html_url,
-        uploadUrl: data.upload_url,
-        tag: data.tag_name,
         created: true,
-    };
-}
-async function handleExisting(octokit, options, existing) {
-    switch (options.ifExists) {
-        case 'skip':
-            core.info(`Release ${options.tag} already exists — skipping`);
-            return { ...existing, created: false };
-        case 'fail':
-            throw new Error(`Release ${options.tag} already exists and if-exists is "fail"`);
-        case 'update':
-            return updateExistingRelease(octokit, options, existing.id);
-    }
-}
-async function updateExistingRelease(octokit, options, releaseId) {
-    core.info(`Updating existing release ${options.tag}`);
-    const { data } = await octokit.rest.repos.updateRelease({
-        owner: options.owner,
-        repo: options.repo,
-        release_id: releaseId,
-        name: options.name,
-        body: options.body,
-        draft: options.draft,
-        prerelease: options.prerelease,
-        make_latest: options.makeLatest,
-    });
-    return {
         id: data.id,
-        url: data.html_url,
-        uploadUrl: data.upload_url,
         tag: data.tag_name,
-        created: false,
+        uploadUrl: data.upload_url,
+        url: data.html_url,
     };
 }
-// ============================================================================
-// Find Existing
-// ============================================================================
 async function findExistingRelease(octokit, owner, repo, tag) {
     try {
         const { data } = await octokit.rest.repos.getReleaseByTag({
@@ -65068,14 +65109,48 @@ async function findExistingRelease(octokit, owner, repo, tag) {
         });
         return {
             id: data.id,
-            url: data.html_url,
-            uploadUrl: data.upload_url,
             tag: data.tag_name,
+            uploadUrl: data.upload_url,
+            url: data.html_url,
         };
     }
     catch {
         return null;
     }
+}
+async function handleExisting(octokit, options, existing) {
+    switch (options.ifExists) {
+        case 'fail':
+            throw new Error(`Release ${options.tag} already exists and if-exists is "fail"`);
+        case 'update':
+            return updateExistingRelease(octokit, options, existing.id);
+        case 'skip':
+            core.info(`Release ${options.tag} already exists — skipping`);
+            return { ...existing, created: false };
+    }
+}
+// ============================================================================
+// Find Existing
+// ============================================================================
+async function updateExistingRelease(octokit, options, releaseId) {
+    core.info(`Updating existing release ${options.tag}`);
+    const { data } = await octokit.rest.repos.updateRelease({
+        body: options.body,
+        draft: options.draft,
+        make_latest: options.makeLatest,
+        name: options.name,
+        owner: options.owner,
+        prerelease: options.prerelease,
+        release_id: releaseId,
+        repo: options.repo,
+    });
+    return {
+        created: false,
+        id: data.id,
+        tag: data.tag_name,
+        uploadUrl: data.upload_url,
+        url: data.html_url,
+    };
 }
 // ============================================================================
 // Tag Operations
@@ -65090,24 +65165,24 @@ async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
     try {
         await octokit.rest.git.getRef({
             owner,
-            repo,
             ref: pathRef,
+            repo,
         });
         await octokit.rest.git.updateRef({
-            owner,
-            repo,
-            ref: pathRef,
-            sha,
             force: true,
+            owner,
+            ref: pathRef,
+            repo,
+            sha,
         });
         core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`);
     }
-    catch (err) {
+    catch {
         try {
             await octokit.rest.git.createRef({
                 owner,
-                repo,
                 ref: createRef,
+                repo,
                 sha,
             });
             core.info(`Created tag ${tag} → ${sha.substring(0, 7)}`);
@@ -65115,14 +65190,16 @@ async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
         catch (createErr) {
             const message = createErr instanceof Error
                 ? createErr.message
-                : String(createErr ?? 'Unknown error');
+                : typeof createErr === 'string'
+                    ? createErr
+                    : 'Unknown error';
             if (message.includes(REF_ALREADY_EXISTS)) {
                 await octokit.rest.git.updateRef({
-                    owner,
-                    repo,
-                    ref: pathRef,
-                    sha,
                     force: true,
+                    owner,
+                    ref: pathRef,
+                    repo,
+                    sha,
                 });
                 core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`);
             }
@@ -65200,10 +65277,7 @@ async function writeStepSummary(variables, options) {
         ],
         ['Tag', `\`${variables.tag}\``],
         ['Version', `\`${variables.version}\``],
-        [
-            'Previous Tag',
-            variables.previous_tag ? `\`${variables.previous_tag}\`` : '(none)',
-        ],
+        ['Previous Tag', variables.previous_tag ? `\`${variables.previous_tag}\`` : '(none)'],
         ['Date', variables.date],
         ['Branch', `\`${variables.branch}\``],
         ['Actor', `@${variables.actor}`],
@@ -65250,21 +65324,17 @@ async function writeStepSummary(variables, options) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.formatTag = formatTag;
+exports.buildCompareUrl = buildCompareUrl;
 exports.formatMajorTag = formatMajorTag;
 exports.formatMinorTag = formatMinorTag;
+exports.formatTag = formatTag;
 exports.getTagsForStrategy = getTagsForStrategy;
 exports.stripPrefix = stripPrefix;
-exports.buildCompareUrl = buildCompareUrl;
 // ============================================================================
 // Tag Generation
 // ============================================================================
-function formatTag(version, prefix) {
-    const base = `${version.major}.${version.minor}.${version.patch}`;
-    const versionStr = version.prerelease
-        ? `${base}-${version.prerelease}`
-        : base;
-    return `${prefix}${versionStr}`;
+function buildCompareUrl(owner, repo, previousTag, newTag) {
+    return `https://github.com/${owner}/${repo}/compare/${previousTag}...${newTag}`;
 }
 function formatMajorTag(version, prefix) {
     return `${prefix}${version.major}`;
@@ -65275,29 +65345,27 @@ function formatMinorTag(version, prefix) {
 // ============================================================================
 // Strategy
 // ============================================================================
-function getTagsForStrategy(version, prefix, strategy) {
-    const fullTag = formatTag(version, prefix);
-    switch (strategy) {
-        case 'full':
-            return [fullTag];
-        case 'all':
-            return [
-                fullTag,
-                formatMinorTag(version, prefix),
-                formatMajorTag(version, prefix),
-            ];
-        case 'full-and-minor':
-            return [fullTag, formatMinorTag(version, prefix)];
-    }
+function formatTag(version, prefix) {
+    const base = `${version.major}.${version.minor}.${version.patch}`;
+    const versionStr = version.prerelease ? `${base}-${version.prerelease}` : base;
+    return `${prefix}${versionStr}`;
 }
 // ============================================================================
 // Parsing
 // ============================================================================
+function getTagsForStrategy(version, prefix, strategy) {
+    const fullTag = formatTag(version, prefix);
+    switch (strategy) {
+        case 'all':
+            return [fullTag, formatMinorTag(version, prefix), formatMajorTag(version, prefix)];
+        case 'full':
+            return [fullTag];
+        case 'full-and-minor':
+            return [fullTag, formatMinorTag(version, prefix)];
+    }
+}
 function stripPrefix(tag, prefix) {
     return tag.startsWith(prefix) ? tag.slice(prefix.length) : tag;
-}
-function buildCompareUrl(owner, repo, previousTag, newTag) {
-    return `https://github.com/${owner}/${repo}/compare/${previousTag}...${newTag}`;
 }
 
 
@@ -65309,45 +65377,45 @@ function buildCompareUrl(owner, repo, previousTag, newTag) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.renderTemplate = renderTemplate;
 exports.buildTemplateVariables = buildTemplateVariables;
+exports.renderTemplate = renderTemplate;
 // ============================================================================
 // Mustache-Style Template Rendering
 // ============================================================================
 const VARIABLE_REGEX = /\{\{\s*(\w+)\s*\}\}/g;
+function buildTemplateVariables(partial) {
+    return {
+        actor: '',
+        branch: '',
+        changelog: '',
+        changes: '',
+        codename: '',
+        commit: '',
+        commit_short: '',
+        compare_url: '',
+        date: '',
+        llm_summary: '',
+        major: '',
+        minor: '',
+        owner: '',
+        patch: '',
+        previous_tag: '',
+        release_name: '',
+        release_url: '',
+        repo: '',
+        tag: '',
+        version: '',
+        ...partial,
+    };
+}
+// ============================================================================
+// Template Variable Construction
+// ============================================================================
 function renderTemplate(template, variables) {
     return template.replace(VARIABLE_REGEX, (_match, key) => {
         const value = variables[key];
         return value !== undefined ? value : '';
     });
-}
-// ============================================================================
-// Template Variable Construction
-// ============================================================================
-function buildTemplateVariables(partial) {
-    return {
-        tag: '',
-        version: '',
-        major: '',
-        minor: '',
-        patch: '',
-        commit: '',
-        commit_short: '',
-        previous_tag: '',
-        compare_url: '',
-        changes: '',
-        changelog: '',
-        llm_summary: '',
-        codename: '',
-        date: '',
-        repo: '',
-        owner: '',
-        branch: '',
-        actor: '',
-        release_url: '',
-        release_name: '',
-        ...partial,
-    };
 }
 
 
@@ -65366,21 +65434,21 @@ exports.MAX_CODENAME_RETRIES = exports.SHORT_SHA_LENGTH = exports.DEFAULT_CHANGE
 exports.BUMP_PRIORITY = {
     major: 3,
     minor: 2,
-    patch: 1,
     none: 0,
+    patch: 1,
 };
 // ============================================================================
 // Pre-release Channels
 // ============================================================================
 exports.STABLE_CHANNEL = 'stable';
 exports.LLM_DEFAULT_MODELS = {
-    openai: 'gpt-4o-mini',
     anthropic: 'claude-sonnet-4-20250514',
+    openai: 'gpt-4o-mini',
     openrouter: 'openai/gpt-4o-mini',
 };
 exports.LLM_ENDPOINTS = {
-    openai: 'https://api.openai.com/v1/chat/completions',
     anthropic: 'https://api.anthropic.com/v1/messages',
+    openai: 'https://api.openai.com/v1/chat/completions',
     openrouter: 'https://openrouter.ai/api/v1/chat/completions',
 };
 exports.DEFAULT_LLM_MAX_TOKENS = 1024;
@@ -65439,40 +65507,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseSemVer = parseSemVer;
+exports.applyChannel = applyChannel;
+exports.bumpVersion = bumpVersion;
+exports.compareSemVer = compareSemVer;
 exports.formatSemVer = formatSemVer;
 exports.isValidSemVer = isValidSemVer;
-exports.bumpVersion = bumpVersion;
-exports.applyChannel = applyChannel;
-exports.readVersionFromPackageJson = readVersionFromPackageJson;
+exports.parseSemVer = parseSemVer;
 exports.readVersionFromFile = readVersionFromFile;
-exports.compareSemVer = compareSemVer;
+exports.readVersionFromPackageJson = readVersionFromPackageJson;
 const fs = __importStar(__nccwpck_require__(9896));
 // ============================================================================
 // Parsing
 // ============================================================================
 const SEMVER_REGEX = /^v?(\d+)\.(\d+)\.(\d+)(?:-([\w.]+))?$/;
-function parseSemVer(version) {
-    const match = version.trim().match(SEMVER_REGEX);
-    if (!match)
-        return null;
+function applyChannel(version, channel, prereleaseNumber) {
     return {
-        major: parseInt(match[1], 10),
-        minor: parseInt(match[2], 10),
-        patch: parseInt(match[3], 10),
-        prerelease: match[4],
+        ...version,
+        prerelease: `${channel}.${prereleaseNumber}`,
     };
 }
-function formatSemVer(version) {
-    const base = `${version.major}.${version.minor}.${version.patch}`;
-    return version.prerelease ? `${base}-${version.prerelease}` : base;
-}
-function isValidSemVer(version) {
-    return parseSemVer(version) !== null;
-}
-// ============================================================================
-// Bump
-// ============================================================================
 function bumpVersion(current, bump) {
     switch (bump) {
         case 'major':
@@ -65487,34 +65540,45 @@ function bumpVersion(current, bump) {
             };
     }
 }
+function compareSemVer(a, b) {
+    if (a.major !== b.major)
+        return a.major - b.major;
+    if (a.minor !== b.minor)
+        return a.minor - b.minor;
+    return a.patch - b.patch;
+}
+// ============================================================================
+// Bump
+// ============================================================================
+function formatSemVer(version) {
+    const base = `${version.major}.${version.minor}.${version.patch}`;
+    return version.prerelease ? `${base}-${version.prerelease}` : base;
+}
 // ============================================================================
 // Channel (pre-release)
 // ============================================================================
-function applyChannel(version, channel, prereleaseNumber) {
-    return {
-        ...version,
-        prerelease: `${channel}.${prereleaseNumber}`,
-    };
+function isValidSemVer(version) {
+    return parseSemVer(version) !== null;
 }
 // ============================================================================
 // Version Sources
 // ============================================================================
-function readVersionFromPackageJson(path) {
-    const content = fs.readFileSync(path, 'utf-8');
-    const pkg = JSON.parse(content);
-    if (!pkg.version) {
-        throw new Error(`No "version" field found in ${path}`);
-    }
-    if (!isValidSemVer(pkg.version)) {
-        throw new Error(`Invalid version "${pkg.version}" in ${path}. Must be valid semver.`);
-    }
-    return pkg.version;
+function parseSemVer(version) {
+    const match = SEMVER_REGEX.exec(version.trim());
+    if (!match)
+        return null;
+    return {
+        major: parseInt(match[1], 10),
+        minor: parseInt(match[2], 10),
+        patch: parseInt(match[3], 10),
+        prerelease: match[4],
+    };
 }
 function readVersionFromFile(filePath, pattern) {
     const content = fs.readFileSync(filePath, 'utf-8');
     const regex = new RegExp(pattern);
     const match = content.match(regex);
-    if (!match || !match[1]) {
+    if (!match?.[1]) {
         throw new Error(`Could not extract version from ${filePath} using pattern: ${pattern}`);
     }
     const version = match[1];
@@ -65526,12 +65590,16 @@ function readVersionFromFile(filePath, pattern) {
 // ============================================================================
 // Compare
 // ============================================================================
-function compareSemVer(a, b) {
-    if (a.major !== b.major)
-        return a.major - b.major;
-    if (a.minor !== b.minor)
-        return a.minor - b.minor;
-    return a.patch - b.patch;
+function readVersionFromPackageJson(path) {
+    const content = fs.readFileSync(path, 'utf-8');
+    const pkg = JSON.parse(content);
+    if (!pkg.version) {
+        throw new Error(`No "version" field found in ${path}`);
+    }
+    if (!isValidSemVer(pkg.version)) {
+        throw new Error(`Invalid version "${pkg.version}" in ${path}. Must be valid semver.`);
+    }
+    return pkg.version;
 }
 
 

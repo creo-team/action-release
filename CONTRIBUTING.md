@@ -9,6 +9,8 @@ npm install
 ## Commands
 
 - `npm run typecheck` — TypeScript check
+- `npm run lint` — ESLint (@creo-team/eslint-config)
+- `npm run fix` — ESLint with auto-fix
 - `npm test` — Vitest
 - `npm run build` — Compile to `dist/`
 
@@ -16,6 +18,7 @@ npm install
 
 ```bash
 npm run typecheck
+npm run lint
 npm test
 npm run build
 ```
