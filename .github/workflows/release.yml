@@ -30,6 +30,7 @@ jobs:
         uses: ./
         with:
           version-source: package-json
+          tag-prefix: v
           tag-strategy: all
           changelog: 'true'
           if-exists: skip
