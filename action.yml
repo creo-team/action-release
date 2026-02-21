@@ -10,7 +10,7 @@ inputs:
     description: 'Explicit version (e.g. 1.2.3). Overrides auto-detection.'
     required: false
   version-source:
-    description: 'auto (from commits), package-json, file, or manual.'
+    description: 'auto (from commits), package-json, or file. Ignored when version is set.'
     required: false
     default: 'auto'
   version-file:
@@ -161,9 +161,9 @@ inputs:
     required: false
     default: 'false'
   llm-provider:
-    description: 'openai (default), anthropic, or openrouter.'
+    description: 'openrouter (default), openai, or anthropic.'
     required: false
-    default: 'openai'
+    default: 'openrouter'
   llm-api-key:
     description: 'API key. Store in GitHub Secrets. Required only if llm-release-notes is true.'
     required: false

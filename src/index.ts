@@ -60,14 +60,11 @@ async function run(): Promise<void> {
 
   let version: SemVer;
 
-  switch (config.versionSource) {
-    case 'manual': {
-      const parsed = parseSemVer(config.version!);
-      if (!parsed) throw new Error(`Invalid manual version: ${config.version}`);
-      version = parsed;
-      break;
-    }
-
+  if (config.version) {
+    const parsed = parseSemVer(config.version);
+    if (!parsed) throw new Error(`Invalid version: ${config.version}`);
+    version = parsed;
+  } else switch (config.versionSource) {
     case 'package-json': {
       const versionStr = readVersionFromPackageJson('package.json');
       version = parseSemVer(versionStr)!;

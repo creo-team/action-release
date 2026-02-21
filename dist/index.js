@@ -63955,48 +63955,48 @@ async function run() {
     // 3. Resolve version
     // ============================================================================
     let version;
-    switch (config.versionSource) {
-        case 'manual': {
-            const parsed = (0, version_1.parseSemVer)(config.version);
-            if (!parsed)
-                throw new Error(`Invalid manual version: ${config.version}`);
-            version = parsed;
-            break;
-        }
-        case 'package-json': {
-            const versionStr = (0, version_1.readVersionFromPackageJson)('package.json');
-            version = (0, version_1.parseSemVer)(versionStr);
-            break;
-        }
-        case 'file': {
-            const versionStr = (0, version_1.readVersionFromFile)(config.versionFile, config.versionPattern);
-            version = (0, version_1.parseSemVer)(versionStr);
-            break;
-        }
-        case 'auto': {
-            if (!previousTag) {
-                version = (0, version_1.parseSemVer)(config.initialVersion);
-                core.info(`No previous tag — using initial version ${config.initialVersion}`);
-            }
-            else {
-                const previousVersion = (0, version_1.parseSemVer)(previousTag.replace(config.tagPrefix, ''));
-                if (!previousVersion) {
-                    throw new Error(`Cannot parse previous tag "${previousTag}" as semver`);
-                }
-                const bumpTexts = collectBumpTexts(config.bumpSource, messages);
-                const bumpResult = (0, bump_1.detectBumpFromMessages)(bumpTexts, config.majorKeywords, config.minorKeywords, config.patchKeywords);
-                const bumpType = bumpResult.type === 'none' ? config.defaultBump : bumpResult.type;
-                core.info(`Bump: ${bumpType} (${bumpResult.reason})`);
-                if (bumpType === 'none') {
-                    core.info('No bump detected and default-bump is "none" — skipping release');
-                    setSkippedOutputs();
-                    return;
-                }
-                version = (0, version_1.bumpVersion)(previousVersion, bumpType);
-            }
-            break;
-        }
+    if (config.version) {
+        const parsed = (0, version_1.parseSemVer)(config.version);
+        if (!parsed)
+            throw new Error(`Invalid version: ${config.version}`);
+        version = parsed;
     }
+    else
+        switch (config.versionSource) {
+            case 'package-json': {
+                const versionStr = (0, version_1.readVersionFromPackageJson)('package.json');
+                version = (0, version_1.parseSemVer)(versionStr);
+                break;
+            }
+            case 'file': {
+                const versionStr = (0, version_1.readVersionFromFile)(config.versionFile, config.versionPattern);
+                version = (0, version_1.parseSemVer)(versionStr);
+                break;
+            }
+            case 'auto': {
+                if (!previousTag) {
+                    version = (0, version_1.parseSemVer)(config.initialVersion);
+                    core.info(`No previous tag — using initial version ${config.initialVersion}`);
+                }
+                else {
+                    const previousVersion = (0, version_1.parseSemVer)(previousTag.replace(config.tagPrefix, ''));
+                    if (!previousVersion) {
+                        throw new Error(`Cannot parse previous tag "${previousTag}" as semver`);
+                    }
+                    const bumpTexts = collectBumpTexts(config.bumpSource, messages);
+                    const bumpResult = (0, bump_1.detectBumpFromMessages)(bumpTexts, config.majorKeywords, config.minorKeywords, config.patchKeywords);
+                    const bumpType = bumpResult.type === 'none' ? config.defaultBump : bumpResult.type;
+                    core.info(`Bump: ${bumpType} (${bumpResult.reason})`);
+                    if (bumpType === 'none') {
+                        core.info('No bump detected and default-bump is "none" — skipping release');
+                        setSkippedOutputs();
+                        return;
+                    }
+                    version = (0, version_1.bumpVersion)(previousVersion, bumpType);
+                }
+                break;
+            }
+        }
     // ============================================================================
     // 4. Apply channel (pre-release)
     // ============================================================================
@@ -64384,7 +64384,6 @@ const VALID_VERSION_SOURCES = [
     'auto',
     'package-json',
     'file',
-    'manual',
 ];
 const VALID_BUMP_TYPES = ['major', 'minor', 'patch', 'none'];
 const VALID_BUMP_SOURCES = [
@@ -64443,9 +64442,6 @@ function parseInputs() {
     const llmReleaseNotes = parseBool(core.getInput('llm-release-notes'));
     if (llmReleaseNotes && !core.getInput('llm-api-key')) {
         core.warning('llm-release-notes is enabled but no llm-api-key provided. LLM notes will be skipped.');
-    }
-    if (versionSource === 'manual' && !core.getInput('version')) {
-        throw new Error('version-source is "manual" but no version input was provided.');
     }
     if (versionSource === 'file' && !core.getInput('version-file')) {
         throw new Error('version-source is "file" but no version-file input was provided.');
@@ -65363,11 +65359,9 @@ exports.LLM_ENDPOINTS = {
     openrouter: 'https://openrouter.ai/api/v1/chat/completions',
 };
 exports.DEFAULT_LLM_MAX_TOKENS = 1024;
-exports.DEFAULT_LLM_PROMPT = `You are a release notes writer for an open-source project.
-Given the commit history (and optionally the diff) for a new release, write clear, concise release notes.
-Group changes into sections: Added, Changed, Fixed, Removed (omit empty sections).
-Use bullet points. Highlight breaking changes prominently at the top if any exist.
-Keep it under 300 words. Be professional but approachable.`;
+exports.DEFAULT_LLM_PROMPT = `Write release notes from the commit history. Be clear and concise.
+Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
+Put breaking changes first with a brief warning. Professional tone.`;
 // ============================================================================
 // Defaults
 // ============================================================================

@@ -6,7 +6,7 @@ export interface SemVer {
     patch: number;
     prerelease?: string;
 }
-export type VersionSource = 'auto' | 'package-json' | 'file' | 'manual';
+export type VersionSource = 'auto' | 'package-json' | 'file';
 export type TagStrategy = 'full' | 'all' | 'full-and-minor';
 export declare const STABLE_CHANNEL = "stable";
 export type IfExistsBehavior = 'skip' | 'fail' | 'update';
@@ -16,7 +16,7 @@ export type LlmContext = 'commits' | 'diff' | 'both';
 export declare const LLM_DEFAULT_MODELS: Record<LlmProvider, string>;
 export declare const LLM_ENDPOINTS: Record<LlmProvider, string>;
 export declare const DEFAULT_LLM_MAX_TOKENS = 1024;
-export declare const DEFAULT_LLM_PROMPT = "You are a release notes writer for an open-source project.\nGiven the commit history (and optionally the diff) for a new release, write clear, concise release notes.\nGroup changes into sections: Added, Changed, Fixed, Removed (omit empty sections).\nUse bullet points. Highlight breaking changes prominently at the top if any exist.\nKeep it under 300 words. Be professional but approachable.";
+export declare const DEFAULT_LLM_PROMPT = "Write release notes from the commit history. Be clear and concise.\nSections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.\nPut breaking changes first with a brief warning. Professional tone.";
 export type CodenameTheme = 'off' | 'adjective-animal' | 'the-office' | 'planets' | 'mythology' | 'gemstones' | 'ships' | 'custom';
 export type BumpSource = 'commits' | 'pr-title' | 'pr-body' | 'all';
 export type PreviousReleaseStrategy = 'latest-release' | 'latest-tag' | 'tag-pattern' | 'specific-tag';

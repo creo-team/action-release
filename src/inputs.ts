@@ -58,7 +58,6 @@ const VALID_VERSION_SOURCES: VersionSource[] = [
   'auto',
   'package-json',
   'file',
-  'manual',
 ];
 const VALID_BUMP_TYPES: BumpType[] = ['major', 'minor', 'patch', 'none'];
 const VALID_BUMP_SOURCES: BumpSource[] = [
@@ -178,12 +177,6 @@ export function parseInputs(): ActionConfig {
   if (llmReleaseNotes && !core.getInput('llm-api-key')) {
     core.warning(
       'llm-release-notes is enabled but no llm-api-key provided. LLM notes will be skipped.'
-    );
-  }
-
-  if (versionSource === 'manual' && !core.getInput('version')) {
-    throw new Error(
-      'version-source is "manual" but no version input was provided.'
     );
   }
 

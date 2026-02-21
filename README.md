@@ -1,6 +1,9 @@
 # Action Release
 
-**One action. Zero config to start.** Automated GitHub releases with semantic versioning, conventional commits, changelogs, and optional LLM-powered notes.
+[![Release](https://img.shields.io/github/v/release/creo-team/action-release)](https://github.com/creo-team/action-release/releases)
+[![License](https://img.shields.io/github/license/creo-team/action-release)](./LICENSE)
+
+One action. Zero config to start. Semantic versioning, conventional commits, changelogs, optional LLM notes.
 
 ```yaml
 - uses: creo-team/action-release@v1
@@ -51,30 +54,67 @@ Check the **Summary** tab in the Actions run — you'll see the version, tag, an
 
 ---
 
-## Quick Start Options
+## Common patterns
 
-| Use case | Add this |
-|----------|----------|
-| Changelog in release body | `changelog: true` |
-| From package.json | `version-source: package-json` |
-| Explicit version | `version: '2.0.0'` |
-| Test first (no release) | `dry-run: true` |
+### Changelog in release body
 
 ```yaml
-# Minimal + changelog (recommended)
 - uses: creo-team/action-release@v1
   with:
     changelog: true
+```
 
-# From package.json
+### From package.json
+
+```yaml
 - uses: creo-team/action-release@v1
   with:
     version-source: package-json
+```
 
-# Explicit version
+### Explicit version
+
+```yaml
 - uses: creo-team/action-release@v1
   with:
     version: '2.0.0'
+```
+
+### Dry run (preview, no release)
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    dry-run: true
+```
+
+### Tag strategy: v1, v1.0, v1.0.9 (for actions/libraries)
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    tag-strategy: all
+```
+
+### Pre-release channel (beta, alpha, rc)
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    channel: beta
+```
+
+### LLM-powered notes (OpenRouter default)
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    llm-release-notes: true
+    llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+    body-template: |
+      {{llm_summary}}
+
+      <details><summary>Commits</summary>{{changes}}</details>
 ```
 
 ---
@@ -101,181 +141,6 @@ Check the **Summary** tab in the Actions run — you'll see the version, tag, an
 | **Comparison URLs** | Full diff link between releases | Always in outputs |
 | **Version from Any File** | Extract with regex from Makefile, .env, etc. | `version-source: file` |
 | **Previous Release Strategy** | Control how the baseline is found | `previous-release-strategy` |
-
----
-
-## Inputs
-
-### Version Resolution
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `version` | Explicit version (e.g. `1.2.3`). Overrides auto-detection. | — |
-| `version-source` | `auto`, `package-json`, `file`, `manual` | `auto` |
-| `version-file` | Path to file with version (for `file` source) | — |
-| `version-pattern` | Regex capture group for version extraction | `"version":\s*"([^"]+)"` |
-| `default-bump` | Fallback bump: `major`, `minor`, `patch`, `none` | `patch` |
-| `initial-version` | Starting version when no tags exist | `0.1.0` |
-
-### Bump Keywords
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `major-keywords` | Comma-separated major bump triggers | `BREAKING CHANGE,major,!:` |
-| `minor-keywords` | Comma-separated minor bump triggers | `feat,feature,minor` |
-| `patch-keywords` | Comma-separated patch bump triggers | `fix,bug,patch,chore,refactor` |
-| `bump-source` | Where to scan: `commits`, `pr-title`, `pr-body`, `all` | `commits` |
-
-### Tags
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `tag-prefix` | Prefix for tags (set `""` for no prefix) | `v` |
-| `tag-strategy` | `full`, `all`, `full-and-minor` | `full` |
-
-### Pre-release Channels
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `channel` | `stable`, `alpha`, `beta`, `rc`, or custom | `stable` |
-
-### Release Controls
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `draft` | Create a draft release | `false` |
-| `prerelease` | Mark as prerelease (auto-set for non-stable channels) | `false` |
-| `make-latest` | `true`, `false`, `legacy` | `true` |
-| `target-commitish` | Branch or SHA for the tag | Current ref |
-| `discussion-category` | Link to a discussion category | — |
-| `if-exists` | On duplicate: `skip`, `fail`, `update` | `skip` |
-
-### Release Notes
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `body` | Static markdown body | — |
-| `body-path` | Path to markdown file | — |
-| `body-template` | Template with `{{variables}}` | — |
-| `append-body` | Append to existing body | `false` |
-| `generate-release-notes` | Use GitHub auto-generated notes | `false` |
-
-### Release Name & Codename
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `name` | Explicit release name | — |
-| `name-template` | Template (e.g. `{{version}} "{{codename}}"`) | — |
-| `codename` | Theme: `off`, `adjective-animal`, `the-office`, `planets`, `mythology`, `gemstones`, `ships`, `custom` | `off` |
-| `codename-words` | Custom word list (comma or newline separated) | — |
-
-### Changelog
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `changelog` | Generate conventional changelog. When true, also sets release body automatically. | `false` |
-| `update-changelog` | Prepend to changelog file | `false` |
-| `changelog-path` | Path to changelog file | `CHANGELOG.md` |
-
-### LLM Release Notes
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `llm-release-notes` | Enable LLM-powered release notes | `false` |
-| `llm-provider` | `openai`, `anthropic`, `openrouter` | `openai` |
-| `llm-api-key` | API key (use a secret) | — |
-| `llm-model` | Model override | Per-provider default |
-| `llm-prompt` | Custom system prompt | Built-in prompt |
-| `llm-max-tokens` | Max response tokens | `1024` |
-| `llm-context` | What to send: `commits`, `diff`, `both` | `commits` |
-
-### Assets
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `files` | Newline-delimited glob patterns | — |
-| `working-directory` | Base directory for globs | `.` |
-| `overwrite-files` | Overwrite existing assets | `true` |
-| `fail-on-unmatched-files` | Fail on unmatched globs | `false` |
-
-### Notifications
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `slack-webhook` | Slack incoming webhook URL | — |
-| `discord-webhook` | Discord webhook URL | — |
-| `teams-webhook` | Microsoft Teams webhook URL | — |
-| `webhook-url` | Generic webhook (JSON POST) | — |
-| `notification-template` | Custom message template | — |
-
-### Previous Release
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `previous-release-strategy` | `latest-release`, `latest-tag`, `tag-pattern`, `specific-tag` | `latest-tag` |
-| `previous-tag` | Specific tag for comparison | — |
-| `tag-match-pattern` | Glob for tag matching | — |
-
-### Behavior
-
-| Input | Description | Default |
-|-------|-------------|---------|
-| `dry-run` | Preview without side effects | `false` |
-| `token` | GitHub token | `${{ github.token }}` |
-
----
-
-## Outputs
-
-| Output | Description |
-|--------|-------------|
-| `tag` | Primary tag (e.g. `v1.0.9`) |
-| `version` | Version without prefix (`1.0.9`) |
-| `major` | Major version number |
-| `minor` | Minor version number |
-| `patch` | Patch version number |
-| `tags` | JSON array of all tags created/moved |
-| `previous-tag` | Previous release tag |
-| `compare-url` | GitHub compare URL between releases |
-| `url` | Release page URL |
-| `id` | Release ID |
-| `upload-url` | Asset upload URL |
-| `created` | `true` if release was created |
-| `codename` | Generated codename |
-| `release-name` | Final release name |
-| `changelog` | Conventional changelog markdown |
-| `llm-summary` | LLM-generated summary |
-| `body` | Final rendered body |
-| `dry-run` | `true` if dry run |
-
----
-
-## Template Variables
-
-Available in `body-template`, `name-template`, and `notification-template`:
-
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `{{tag}}` | `v1.2.0` | Full tag with prefix |
-| `{{version}}` | `1.2.0` | Version without prefix |
-| `{{major}}` | `1` | Major version |
-| `{{minor}}` | `2` | Minor version |
-| `{{patch}}` | `0` | Patch version |
-| `{{commit}}` | `a1b2c3d...` | Full commit SHA |
-| `{{commit_short}}` | `a1b2c3d` | Short SHA (7 chars) |
-| `{{previous_tag}}` | `v1.1.0` | Previous release tag |
-| `{{compare_url}}` | `https://...` | Diff URL between releases |
-| `{{changes}}` | (multiline) | Raw commit log since previous tag |
-| `{{changelog}}` | (multiline) | Structured conventional changelog |
-| `{{llm_summary}}` | (multiline) | LLM-generated summary |
-| `{{codename}}` | `Swift Falcon` | Generated codename |
-| `{{date}}` | `2025-06-15` | ISO release date |
-| `{{repo}}` | `creo-team/app` | Repository `owner/repo` |
-| `{{owner}}` | `creo-team` | Repository owner |
-| `{{branch}}` | `main` | Branch or ref name |
-| `{{actor}}` | `octocat` | User who triggered the workflow |
-| `{{release_url}}` | `https://...` | Release page URL |
-| `{{release_name}}` | `v1.2.0 "Swift Falcon"` | Final release name |
 
 ---
 
@@ -440,17 +305,19 @@ If the tag already exists, the action succeeds without creating a duplicate. Set
 
 **Optional.** Add AI-generated summaries to your releases. Works with OpenAI, Anthropic, or OpenRouter. Disabled by default — no API key needed for basic use.
 
-### Minimal Setup (3 inputs)
+### Minimal setup (3 inputs)
+
+Uses OpenRouter by default. Add your [OpenRouter API key](https://openrouter.ai/keys):
 
 ```yaml
 - uses: creo-team/action-release@v1
   with:
     llm-release-notes: true
-    llm-api-key: ${{ secrets.OPENAI_API_KEY }}
+    llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
     body-template: |
       {{llm_summary}}
 
-      <details><summary>Commit log</summary>{{changes}}</details>
+      <details><summary>Commits</summary>{{changes}}</details>
 ```
 
 ### LLM-Friendly: Copy-Paste Prompts
@@ -483,13 +350,23 @@ llm-prompt: |
 
 ### Providers
 
-| Provider | Default Model | Set with |
+| Provider | Default model | Set with |
 |----------|---------------|----------|
+| `openrouter` | `openai/gpt-4o-mini` | default |
 | `openai` | `gpt-4o-mini` | `llm-provider: openai` |
 | `anthropic` | `claude-sonnet-4-20250514` | `llm-provider: anthropic` |
-| `openrouter` | `openai/gpt-4o-mini` | `llm-provider: openrouter` |
 
-Override: `llm-model: gpt-4o`
+Override model: `llm-model: gpt-4o`
+
+### Default prompt
+
+When `llm-prompt` is not set, the action uses:
+
+> Write release notes from the commit history. Be clear and concise.
+> Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
+> Put breaking changes first with a brief warning. Professional tone.
+
+Override with `llm-prompt` to customize tone or format.
 
 ### Context (what gets sent to the LLM)
 
@@ -499,14 +376,14 @@ Override: `llm-model: gpt-4o`
 | `diff` | Code-heavy releases | Medium |
 | `both` | Maximum detail | Higher |
 
-### LLM + Changelog Together
+### LLM + changelog together
 
 ```yaml
 - uses: creo-team/action-release@v1
   with:
     changelog: true
     llm-release-notes: true
-    llm-api-key: ${{ secrets.OPENAI_API_KEY }}
+    llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
     body-template: |
       {{llm_summary}}
 
@@ -526,14 +403,14 @@ Override: `llm-model: gpt-4o`
 
 ## Version Resolution
 
-The action determines the next version through a priority chain:
+Priority: `version` input overrides everything. Otherwise:
 
-```
-1. version input (explicit)       → "1.2.3"
-2. version-source: package-json   → reads from package.json
-3. version-source: file           → extracts via regex from any file
-4. version-source: auto (default) → bumps from last tag using keywords
-```
+| Source | When |
+|--------|------|
+| `version` | Explicit (e.g. `version: '1.2.3'`) |
+| `package-json` | Read from package.json |
+| `file` | Extract via regex from any file |
+| `auto` (default) | Bump from last tag using commit keywords |
 
 For `auto` mode, the action:
 
@@ -670,8 +547,54 @@ Set `if-exists` to control behavior:
 ### LLM notes empty or erroring
 
 - Verify the API key is set correctly as a secret
-- Check the provider name matches (`openai`, `anthropic`, `openrouter`)
+- Default provider is OpenRouter; use `llm-provider: openai` or `anthropic` if needed
 - Review the step output/logs for API error messages
+
+---
+
+## Reference
+
+### Inputs
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `version` | — | Explicit version. Overrides auto-detection. |
+| `version-source` | `auto` | `auto`, `package-json`, `file` (version overrides) |
+| `default-bump` | `patch` | Fallback when no keywords match |
+| `tag-prefix` | `v` | Tag prefix. Empty for none. |
+| `tag-strategy` | `full` | `full`, `all`, `full-and-minor` |
+| `channel` | `stable` | `stable`, `alpha`, `beta`, `rc`, or custom |
+| `changelog` | `false` | Generate changelog and set release body |
+| `llm-release-notes` | `false` | Enable LLM notes |
+| `llm-provider` | `openrouter` | `openrouter`, `openai`, `anthropic` |
+| `dry-run` | `false` | Preview without creating anything |
+| `if-exists` | `skip` | When tag exists: `skip`, `fail`, `update` |
+
+Full list in [action.yml](./action.yml).
+
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `tag` | Primary tag (e.g. `v1.0.9`) |
+| `version` | Version without prefix |
+| `compare-url` | Diff URL between releases |
+| `url` | Release page URL |
+| `created` | `true` if release was created |
+| `changelog` | Conventional changelog markdown |
+| `llm-summary` | LLM-generated summary |
+
+### Template variables
+
+Use in `body-template`, `name-template`, `notification-template`:
+
+`{{tag}}` `{{version}}` `{{commit_short}}` `{{previous_tag}}` `{{compare_url}}` `{{changelog}}` `{{llm_summary}}` `{{codename}}` `{{date}}` `{{repo}}` `{{branch}}` `{{actor}}` `{{release_url}}` `{{release_name}}` `{{changes}}`
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 

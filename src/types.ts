@@ -22,7 +22,7 @@ export interface SemVer {
   prerelease?: string;
 }
 
-export type VersionSource = 'auto' | 'package-json' | 'file' | 'manual';
+export type VersionSource = 'auto' | 'package-json' | 'file';
 
 // ============================================================================
 // Tags
@@ -64,11 +64,9 @@ export const LLM_ENDPOINTS: Record<LlmProvider, string> = {
 
 export const DEFAULT_LLM_MAX_TOKENS = 1024;
 
-export const DEFAULT_LLM_PROMPT = `You are a release notes writer for an open-source project.
-Given the commit history (and optionally the diff) for a new release, write clear, concise release notes.
-Group changes into sections: Added, Changed, Fixed, Removed (omit empty sections).
-Use bullet points. Highlight breaking changes prominently at the top if any exist.
-Keep it under 300 words. Be professional but approachable.`;
+export const DEFAULT_LLM_PROMPT = `Write release notes from the commit history. Be clear and concise.
+Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
+Put breaking changes first with a brief warning. Professional tone.`;
 
 // ============================================================================
 // Codename Themes
