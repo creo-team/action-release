@@ -36,7 +36,7 @@ describe('sendNotifications', () => {
 			expect.objectContaining({ method: 'POST' }),
 		)
 
-		const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 		expect(body.text).toContain('owner/repo')
 		expect(body.text).toContain('v1.0.0')
 		expect(body.blocks).toBeDefined()
@@ -46,7 +46,7 @@ describe('sendNotifications', () => {
 		await sendNotifications({ discordWebhook: 'https://discord.com/api/webhooks/test' }, variables)
 
 		expect(mockFetch).toHaveBeenCalledTimes(1)
-		const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 		expect(body.embeds).toBeDefined()
 		expect(body.embeds[0].title).toContain('owner/repo')
 	})
@@ -55,7 +55,7 @@ describe('sendNotifications', () => {
 		await sendNotifications({ teamsWebhook: 'https://teams.webhook.test' }, variables)
 
 		expect(mockFetch).toHaveBeenCalledTimes(1)
-		const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 		expect(body['@type']).toBe('MessageCard')
 		expect(body.title).toContain('owner/repo')
 	})
@@ -64,7 +64,7 @@ describe('sendNotifications', () => {
 		await sendNotifications({ genericWebhookUrl: 'https://webhook.example.com/release' }, variables)
 
 		expect(mockFetch).toHaveBeenCalledTimes(1)
-		const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 		expect(body.tag).toBe('v1.0.0')
 		expect(body.repo).toBe('owner/repo')
 	})
@@ -92,7 +92,7 @@ describe('sendNotifications', () => {
 			variables,
 		)
 
-		const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 		expect(body.text).toBe('Released v1.0.0 for owner/repo')
 	})
 

@@ -37,4 +37,11 @@ module.exports = [
       'jsdoc/require-yields': 'off',
     },
   },
+  {
+    files: ['src/index.ts'],
+    rules: {
+      'max-lines': 'off',
+      'max-lines-per-function': 'off',
+    },
+  },
 ]

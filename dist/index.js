@@ -64033,19 +64033,21 @@ function collectBumpTexts(bumpSource, messages) {
         case 'all': {
             const texts = [...messages];
             const pr = context.payload.pull_request;
-            if (pr?.title)
-                texts.push(pr.title);
-            if (pr?.body)
-                texts.push(pr.body);
+            const title = pr?.title;
+            if (typeof title === 'string')
+                texts.push(title);
+            const body = pr?.body;
+            if (typeof body === 'string')
+                texts.push(body);
             return texts;
         }
         case 'pr-body': {
             const prBody = context.payload.pull_request?.body;
-            return prBody ? [prBody] : messages;
+            return typeof prBody === 'string' ? [prBody] : messages;
         }
         case 'pr-title': {
             const prTitle = context.payload.pull_request?.title;
-            return prTitle ? [prTitle] : messages;
+            return typeof prTitle === 'string' ? [prTitle] : messages;
         }
         default:
             return messages;
@@ -64064,8 +64066,8 @@ async function getCommitData(octokit, owner, repo, headSha, previousTag, include
             owner,
             repo,
         });
-        const messages = data.commits.map((c) => c.commit.message);
-        const hashes = data.commits.map((c) => c.sha);
+        const messages = data.commits.map((c) => c.commit.message).filter((m) => typeof m === 'string');
+        const hashes = data.commits.map((c) => c.sha).filter((s) => typeof s === 'string');
         let diff = null;
         if (includeDiff) {
             const { data: diffData } = await octokit.rest.repos.compareCommitsWithBasehead({
@@ -64140,7 +64142,10 @@ async function run() {
         switch (config.versionSource) {
             case 'auto': {
                 if (!previousTag) {
-                    version = (0, version_1.parseSemVer)(config.initialVersion);
+                    const parsed = (0, version_1.parseSemVer)(config.initialVersion);
+                    if (!parsed)
+                        throw new Error(`Invalid initial-version: ${config.initialVersion}`);
+                    version = parsed;
                     core.info(`No previous tag — using initial version ${config.initialVersion}`);
                 }
                 else {
@@ -64163,13 +64168,22 @@ async function run() {
                 break;
             }
             case 'file': {
-                const versionStr = (0, version_1.readVersionFromFile)(config.versionFile, config.versionPattern);
-                version = (0, version_1.parseSemVer)(versionStr);
+                const versionFile = config.versionFile;
+                if (!versionFile)
+                    throw new Error('version-source is "file" but version-file is missing');
+                const versionStr = (0, version_1.readVersionFromFile)(versionFile, config.versionPattern);
+                const parsed = (0, version_1.parseSemVer)(versionStr);
+                if (!parsed)
+                    throw new Error(`Cannot parse version from file: ${versionStr}`);
+                version = parsed;
                 break;
             }
             case 'package-json': {
                 const versionStr = (0, version_1.readVersionFromPackageJson)('package.json');
-                version = (0, version_1.parseSemVer)(versionStr);
+                const parsed = (0, version_1.parseSemVer)(versionStr);
+                if (!parsed)
+                    throw new Error(`Cannot parse version from package.json: ${versionStr}`);
+                version = parsed;
                 break;
             }
         }
@@ -64183,6 +64197,8 @@ async function run() {
     const versionStr = (0, version_1.formatSemVer)(version);
     const tags = (0, tags_1.getTagsForStrategy)(version, config.tagPrefix, config.tagStrategy, config.tagSuffix);
     const primaryTag = tags[0];
+    if (!primaryTag)
+        throw new Error('No tags generated');
     core.info(`Version: ${versionStr}`);
     core.info(`Tags: ${tags.join(', ')}`);
     // ============================================================================
@@ -64283,11 +64299,11 @@ async function run() {
         core.info('Dry run — no tags or releases will be created');
         setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, true, false);
         await (0, summary_1.writeStepSummary)(templateVars, {
-            changelog: changelogMd || undefined,
-            codename: codename || undefined,
+            changelog: changelogMd ? changelogMd : undefined,
+            codename: codename ? codename : undefined,
             created: false,
             dryRun: true,
-            llmSummary: llmSummary || undefined,
+            llmSummary: llmSummary ? llmSummary : undefined,
             tags,
         });
         return;
@@ -64353,11 +64369,11 @@ async function run() {
     // 17. Write step summary
     // ============================================================================
     await (0, summary_1.writeStepSummary)(templateVars, {
-        changelog: changelogMd || undefined,
-        codename: codename || undefined,
+        changelog: changelogMd ? changelogMd : undefined,
+        codename: codename ? codename : undefined,
         created: releaseResult.created,
         dryRun: false,
-        llmSummary: llmSummary || undefined,
+        llmSummary: llmSummary ? llmSummary : undefined,
         tags,
         uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
     });
@@ -64560,8 +64576,14 @@ function parseInputs() {
             teamsWebhook: parseOptional(core.getInput('teams-webhook')),
             template: parseOptional(core.getInput('notification-template')),
         },
-        overwriteFiles: parseBool(core.getInput('overwrite-files') || 'true'),
-        patchKeywords: parseCommaSeparated(core.getInput('patch-keywords') || 'fix,bug,patch,chore,refactor'),
+        overwriteFiles: (() => {
+            const raw = core.getInput('overwrite-files');
+            return parseBool(raw.trim() === '' ? 'true' : raw);
+        })(),
+        patchKeywords: (() => {
+            const raw = core.getInput('patch-keywords');
+            return parseCommaSeparated(raw.trim() === '' ? 'fix,bug,patch,chore,refactor' : raw);
+        })(),
         prerelease: parseBool(core.getInput('prerelease')) || channel !== types_1.STABLE_CHANNEL,
         previousReleaseStrategy,
         previousTag: parseOptional(core.getInput('previous-tag')),
@@ -64570,7 +64592,10 @@ function parseInputs() {
         tagStrategy,
         tagSuffix: core.getInput('tag-suffix') ?? types_1.DEFAULT_TAG_SUFFIX,
         targetCommitish: parseOptional(core.getInput('target-commitish')),
-        token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
+        token: (() => {
+            const t = core.getInput('token');
+            return t.trim() !== '' ? t : (process.env.GITHUB_TOKEN ?? '');
+        })(),
         updateChangelog: parseBool(core.getInput('update-changelog')),
         version: parseOptional(core.getInput('version')),
         versionFile: parseOptional(core.getInput('version-file')),
@@ -65446,7 +65471,7 @@ function buildTemplateVariables(partial) {
 function renderTemplate(template, variables) {
     return template.replace(VARIABLE_REGEX, (_match, key) => {
         const value = variables[key];
-        return value !== undefined ? value : '';
+        return value ?? '';
     });
 }
 

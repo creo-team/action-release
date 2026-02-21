@@ -50,7 +50,7 @@ describe('generateLlmReleaseNotes', () => {
 				}),
 			)
 
-			const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+			const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 			expect(body.model).toBe('gpt-4o-mini')
 			expect(body.messages).toHaveLength(2)
 			expect(body.messages[0].role).toBe('system')
@@ -147,7 +147,7 @@ describe('generateLlmReleaseNotes', () => {
 
 			await generateLlmReleaseNotes({ ...baseOptions, model: 'gpt-4o' }, baseInput)
 
-			const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+			const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 			expect(body.model).toBe('gpt-4o')
 		})
 
@@ -161,7 +161,7 @@ describe('generateLlmReleaseNotes', () => {
 
 			await generateLlmReleaseNotes({ ...baseOptions, systemPrompt: 'Be brief.' }, baseInput)
 
-			const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+			const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 			expect(body.messages[0].content).toBe('Be brief.')
 		})
 
@@ -178,7 +178,7 @@ describe('generateLlmReleaseNotes', () => {
 				diff: '+ added line\n- removed line',
 			})
 
-			const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+			const body = JSON.parse(mockFetch.mock.calls[0][1].body as string)
 			expect(body.messages[1].content).toContain('Diff')
 			expect(body.messages[1].content).toContain('added line')
 		})

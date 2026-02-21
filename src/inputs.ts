@@ -174,8 +174,16 @@ export function parseInputs(): ActionConfig {
 			teamsWebhook: parseOptional(core.getInput('teams-webhook')),
 			template: parseOptional(core.getInput('notification-template')),
 		},
-		overwriteFiles: parseBool(core.getInput('overwrite-files') || 'true'),
-		patchKeywords: parseCommaSeparated(core.getInput('patch-keywords') || 'fix,bug,patch,chore,refactor'),
+		overwriteFiles: (() => {
+			const raw = core.getInput('overwrite-files')
+
+			return parseBool(raw.trim() === '' ? 'true' : raw)
+		})(),
+		patchKeywords: (() => {
+			const raw = core.getInput('patch-keywords')
+
+			return parseCommaSeparated(raw.trim() === '' ? 'fix,bug,patch,chore,refactor' : raw)
+		})(),
 		prerelease: parseBool(core.getInput('prerelease')) || channel !== STABLE_CHANNEL,
 		previousReleaseStrategy,
 		previousTag: parseOptional(core.getInput('previous-tag')),
@@ -185,7 +193,11 @@ export function parseInputs(): ActionConfig {
 		tagStrategy,
 		tagSuffix: core.getInput('tag-suffix') ?? DEFAULT_TAG_SUFFIX,
 		targetCommitish: parseOptional(core.getInput('target-commitish')),
-		token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
+		token: (() => {
+			const t = core.getInput('token')
+
+			return t.trim() !== '' ? t : (process.env.GITHUB_TOKEN ?? '')
+		})(),
 
 		updateChangelog: parseBool(core.getInput('update-changelog')),
 

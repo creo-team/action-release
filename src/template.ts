@@ -40,6 +40,6 @@ export function renderTemplate(template: string, variables: TemplateVariables): 
 	return template.replace(VARIABLE_REGEX, (_match, key: string) => {
 		const value = variables[key as keyof TemplateVariables]
 
-		return value !== undefined ? value : ''
+		return value ?? ''
 	})
 }

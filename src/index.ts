@@ -34,22 +34,24 @@ function collectBumpTexts(bumpSource: string, messages: string[]): string[] {
 
 	switch (bumpSource) {
 		case 'all': {
-			const texts = [...messages]
+			const texts: string[] = [...messages]
 			const pr = context.payload.pull_request
-			if (pr?.title) texts.push(pr.title)
-			if (pr?.body) texts.push(pr.body)
+			const title = pr?.title
+			if (typeof title === 'string') texts.push(title)
+			const body = pr?.body
+			if (typeof body === 'string') texts.push(body)
 
 			return texts
 		}
 		case 'pr-body': {
 			const prBody = context.payload.pull_request?.body
 
-			return prBody ? [prBody] : messages
+			return typeof prBody === 'string' ? [prBody] : messages
 		}
 		case 'pr-title': {
 			const prTitle = context.payload.pull_request?.title
 
-			return prTitle ? [prTitle] : messages
+			return typeof prTitle === 'string' ? [prTitle] : messages
 		}
 		default:
 			return messages
@@ -79,8 +81,8 @@ async function getCommitData(
 			repo,
 		})
 
-		const messages = data.commits.map((c) => c.commit.message)
-		const hashes = data.commits.map((c) => c.sha)
+		const messages = data.commits.map((c) => c.commit.message).filter((m): m is string => typeof m === 'string')
+		const hashes = data.commits.map((c) => c.sha).filter((s): s is string => typeof s === 'string')
 
 		let diff: null | string = null
 		if (includeDiff) {
@@ -181,7 +183,9 @@ async function run(): Promise<void> {
 		switch (config.versionSource) {
 			case 'auto': {
 				if (!previousTag) {
-					version = parseSemVer(config.initialVersion)!
+					const parsed = parseSemVer(config.initialVersion)
+					if (!parsed) throw new Error(`Invalid initial-version: ${config.initialVersion}`)
+					version = parsed
 					core.info(`No previous tag — using initial version ${config.initialVersion}`)
 				} else {
 					const stripped = stripSuffix(previousTag.replace(config.tagPrefix, ''), config.tagSuffix)
@@ -214,14 +218,20 @@ async function run(): Promise<void> {
 			}
 
 			case 'file': {
-				const versionStr = readVersionFromFile(config.versionFile!, config.versionPattern)
-				version = parseSemVer(versionStr)!
+				const versionFile = config.versionFile
+				if (!versionFile) throw new Error('version-source is "file" but version-file is missing')
+				const versionStr = readVersionFromFile(versionFile, config.versionPattern)
+				const parsed = parseSemVer(versionStr)
+				if (!parsed) throw new Error(`Cannot parse version from file: ${versionStr}`)
+				version = parsed
 				break
 			}
 
 			case 'package-json': {
 				const versionStr = readVersionFromPackageJson('package.json')
-				version = parseSemVer(versionStr)!
+				const parsed = parseSemVer(versionStr)
+				if (!parsed) throw new Error(`Cannot parse version from package.json: ${versionStr}`)
+				version = parsed
 				break
 			}
 		}
@@ -245,6 +255,7 @@ async function run(): Promise<void> {
 	const versionStr = formatSemVer(version)
 	const tags = getTagsForStrategy(version, config.tagPrefix, config.tagStrategy, config.tagSuffix)
 	const primaryTag = tags[0]
+	if (!primaryTag) throw new Error('No tags generated')
 
 	core.info(`Version: ${versionStr}`)
 	core.info(`Tags: ${tags.join(', ')}`)
@@ -376,11 +387,11 @@ async function run(): Promise<void> {
 			false,
 		)
 		await writeStepSummary(templateVars, {
-			changelog: changelogMd || undefined,
-			codename: codename || undefined,
+			changelog: changelogMd ? changelogMd : undefined,
+			codename: codename ? codename : undefined,
 			created: false,
 			dryRun: true,
-			llmSummary: llmSummary || undefined,
+			llmSummary: llmSummary ? llmSummary : undefined,
 			tags,
 		})
 
@@ -462,11 +473,11 @@ async function run(): Promise<void> {
 	// ============================================================================
 
 	await writeStepSummary(templateVars, {
-		changelog: changelogMd || undefined,
-		codename: codename || undefined,
+		changelog: changelogMd ? changelogMd : undefined,
+		codename: codename ? codename : undefined,
 		created: releaseResult.created,
 		dryRun: false,
-		llmSummary: llmSummary || undefined,
+		llmSummary: llmSummary ? llmSummary : undefined,
 		tags,
 		uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
 	})
