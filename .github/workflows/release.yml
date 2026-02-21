@@ -1,0 +1,41 @@
+name: Release
+run-name: Release · ${{ github.ref_name }}
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+
+      - name: Release
+        uses: ./
+        with:
+          version-source: package-json
+          tag-strategy: all
+          changelog: 'true'
+          if-exists: skip
+          body-template: |
+            ## What's Changed
+
+            {{changelog}}
+
+            **Full Changelog**: {{compare_url}}

@@ -1,0 +1,293 @@
+name: 'Action Release'
+description: 'Automated GitHub Releases. Zero config to start. Semantic versioning, conventional commits, changelogs, optional LLM notes.'
+author: 'Creo Team'
+
+inputs:
+  # ============================================================================
+  # Version Resolution
+  # ============================================================================
+  version:
+    description: 'Explicit version (e.g. 1.2.3). Overrides auto-detection.'
+    required: false
+  version-source:
+    description: 'auto (from commits), package-json, file, or manual.'
+    required: false
+    default: 'auto'
+  version-file:
+    description: 'Path to file containing version (used when version-source is "file").'
+    required: false
+  version-pattern:
+    description: 'Regex with capture group to extract version from version-file.'
+    required: false
+    default: '"version":\s*"([^"]+)"'
+  default-bump:
+    description: 'Fallback when no keywords match. patch (default), minor, major, or none.'
+    required: false
+    default: 'patch'
+  initial-version:
+    description: 'Starting version when no tags exist. Default 0.1.0.'
+    required: false
+    default: '0.1.0'
+
+  # ============================================================================
+  # Bump Keyword Detection
+  # ============================================================================
+  major-keywords:
+    description: 'Comma-separated. Triggers major bump.'
+    required: false
+    default: 'BREAKING CHANGE,major,!:'
+  minor-keywords:
+    description: 'Comma-separated. Triggers minor bump.'
+    required: false
+    default: 'feat,feature,minor'
+  patch-keywords:
+    description: 'Comma-separated. Triggers patch bump.'
+    required: false
+    default: 'fix,bug,patch,chore,refactor'
+  bump-source:
+    description: 'Where to scan: commits (default), pr-title, pr-body, all.'
+    required: false
+    default: 'commits'
+
+  # ============================================================================
+  # Tags
+  # ============================================================================
+  tag-prefix:
+    description: 'Tag prefix. "v" (default) produces v1.0.0. Empty for no prefix.'
+    required: false
+    default: 'v'
+  tag-strategy:
+    description: 'full (v1.0.9 only), all (v1, v1.0, v1.0.9), or full-and-minor.'
+    required: false
+    default: 'full'
+
+  # ============================================================================
+  # Pre-release Channels
+  # ============================================================================
+  channel:
+    description: 'stable (default), alpha, beta, rc, or custom. Produces v1.2.0-beta.3.'
+    required: false
+    default: 'stable'
+
+  # ============================================================================
+  # Release Controls
+  # ============================================================================
+  draft:
+    description: 'Create draft release. Default false.'
+    required: false
+    default: 'false'
+  prerelease:
+    description: 'Mark as prerelease. Auto-set for non-stable channels.'
+    required: false
+    default: 'false'
+  make-latest:
+    description: 'Set as latest release. true, false, or legacy.'
+    required: false
+    default: 'true'
+  target-commitish:
+    description: 'Branch or SHA for the tag. Default: current ref.'
+    required: false
+  discussion-category:
+    description: 'Link release to a discussion category.'
+    required: false
+  if-exists:
+    description: 'When tag exists: skip (default), fail, or update.'
+    required: false
+    default: 'skip'
+
+  # ============================================================================
+  # Release Notes
+  # ============================================================================
+  body:
+    description: 'Release body (markdown).'
+    required: false
+  body-path:
+    description: 'Path to markdown file for body.'
+    required: false
+  body-template:
+    description: 'Template with {{tag}}, {{changelog}}, {{llm_summary}}, etc.'
+    required: false
+  append-body:
+    description: 'Append to existing body instead of replacing.'
+    required: false
+    default: 'false'
+  generate-release-notes:
+    description: 'Use GitHub auto-generated release notes.'
+    required: false
+    default: 'false'
+
+  # ============================================================================
+  # Release Name / Codename
+  # ============================================================================
+  name:
+    description: 'Explicit release name (overrides name-template and codename).'
+    required: false
+  name-template:
+    description: 'Template for the release name. Supports {{version}}, {{codename}}, {{date}}, etc.'
+    required: false
+  codename:
+    description: 'Codename theme: off, adjective-animal, the-office, planets, mythology, gemstones, ships, custom.'
+    required: false
+    default: 'off'
+  codename-words:
+    description: 'Custom word list (newline or comma-separated) when codename is "custom".'
+    required: false
+
+  # ============================================================================
+  # Conventional Changelog
+  # ============================================================================
+  changelog:
+    description: 'Generate changelog and use it as release body. Grouped by commit type.'
+    required: false
+    default: 'false'
+
+  # ============================================================================
+  # Changelog File
+  # ============================================================================
+  update-changelog:
+    description: 'Prepend the release entry to a changelog file.'
+    required: false
+    default: 'false'
+  changelog-path:
+    description: 'Path to the changelog file.'
+    required: false
+    default: 'CHANGELOG.md'
+
+  # ============================================================================
+  # LLM Release Notes (optional — no API key needed for basic use)
+  # ============================================================================
+  llm-release-notes:
+    description: 'Enable AI-generated release notes. Requires llm-api-key. Default false.'
+    required: false
+    default: 'false'
+  llm-provider:
+    description: 'openai (default), anthropic, or openrouter.'
+    required: false
+    default: 'openai'
+  llm-api-key:
+    description: 'API key. Store in GitHub Secrets. Required only if llm-release-notes is true.'
+    required: false
+  llm-model:
+    description: 'Model override. Defaults: gpt-4o-mini, claude-sonnet-4-20250514, openai/gpt-4o-mini.'
+    required: false
+  llm-prompt:
+    description: 'Custom system prompt. Controls tone and format of generated notes.'
+    required: false
+  llm-max-tokens:
+    description: 'Max response tokens. Default 1024.'
+    required: false
+    default: '1024'
+  llm-context:
+    description: 'What to send: commits (default, cheap), diff, or both.'
+    required: false
+    default: 'commits'
+
+  # ============================================================================
+  # Assets
+  # ============================================================================
+  files:
+    description: 'Newline-delimited glob patterns for asset files to upload.'
+    required: false
+  working-directory:
+    description: 'Base directory for resolving file globs.'
+    required: false
+    default: '.'
+  overwrite-files:
+    description: 'Overwrite existing assets with the same name.'
+    required: false
+    default: 'true'
+  fail-on-unmatched-files:
+    description: 'Fail if any file glob matches nothing.'
+    required: false
+    default: 'false'
+
+  # ============================================================================
+  # Notifications
+  # ============================================================================
+  slack-webhook:
+    description: 'Slack incoming webhook URL for release notifications.'
+    required: false
+  discord-webhook:
+    description: 'Discord webhook URL for release notifications.'
+    required: false
+  teams-webhook:
+    description: 'Microsoft Teams webhook URL for release notifications.'
+    required: false
+  webhook-url:
+    description: 'Generic webhook URL (receives JSON POST with release details).'
+    required: false
+  notification-template:
+    description: 'Custom notification message template. Same {{variables}} as body-template.'
+    required: false
+
+  # ============================================================================
+  # Previous Release Detection
+  # ============================================================================
+  previous-release-strategy:
+    description: 'How to find the previous release: latest-release, latest-tag, tag-pattern, specific-tag.'
+    required: false
+    default: 'latest-tag'
+  previous-tag:
+    description: 'Specific previous tag (when strategy is specific-tag).'
+    required: false
+  tag-match-pattern:
+    description: 'Glob pattern for tag matching (when strategy is tag-pattern). E.g. "v*".'
+    required: false
+
+  # ============================================================================
+  # Behavior
+  # ============================================================================
+  dry-run:
+    description: 'Preview the release without creating tags, releases, or commits.'
+    required: false
+    default: 'false'
+  token:
+    description: 'GitHub token for API access.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  tag:
+    description: 'Primary tag created (e.g. v1.0.9)'
+  version:
+    description: 'Version without prefix (e.g. 1.0.9)'
+  major:
+    description: 'Major version number'
+  minor:
+    description: 'Minor version number'
+  patch:
+    description: 'Patch version number'
+  tags:
+    description: 'JSON array of all tags created or moved'
+  previous-tag:
+    description: 'The previous release tag used for comparison'
+  compare-url:
+    description: 'GitHub compare URL between previous and new tag'
+  url:
+    description: 'Release HTML page URL'
+  id:
+    description: 'GitHub Release ID'
+  upload-url:
+    description: 'URL for uploading additional assets'
+  created:
+    description: 'Whether the release was created (true/false)'
+  codename:
+    description: 'Generated codename (if enabled)'
+  release-name:
+    description: 'Final release name'
+  changelog:
+    description: 'Generated conventional changelog markdown'
+  llm-summary:
+    description: 'LLM-generated release summary (if enabled)'
+  body:
+    description: 'Final rendered release body'
+  dry-run:
+    description: 'Whether this was a dry run (true/false)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'tag'
+  color: 'blue'

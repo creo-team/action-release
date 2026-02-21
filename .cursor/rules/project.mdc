@@ -1,0 +1,46 @@
+# action-release Project
+
+Reusable GitHub Action for automated releases. TypeScript → `dist/index.js` via @vercel/ncc.
+
+## Required Reading
+
+- `CLAUDE.md` — comprehensive project instructions
+- `AGENTS.md` — agent quick reference
+- `action.yml` — all inputs and outputs
+- `README.md` — user-facing documentation with examples
+
+## Key Resources
+
+| File | Purpose |
+|---|---|
+| `src/types.ts` | All shared types and constants |
+| `src/inputs.ts` | Action input parsing and validation |
+| `src/index.ts` | Entry point — orchestrates all modules |
+| `action.yml` | Action metadata (inputs, outputs, branding) |
+
+## Architecture
+
+```
+src/
+├── index.ts             # Entry point
+├── types.ts             # Shared types, constants, string unions
+├── inputs.ts            # Parse @actions/core inputs
+├── version.ts           # Version resolution (auto, package.json, file, manual)
+├── bump.ts              # Keyword detection, conventional commit parsing
+├── tags.ts              # Tag generation (full, all, full-and-minor)
+├── previous-release.ts  # Previous release/tag detection
+├── release.ts           # GitHub Release creation via API
+├── template.ts          # Mustache-style template rendering
+├── changelog.ts         # Conventional changelog generation
+├── changelog-file.ts    # CHANGELOG.md file update
+├── codename.ts          # Codename generation (7 themes)
+├── llm.ts               # LLM release notes (OpenAI, Anthropic, OpenRouter)
+├── notifications.ts     # Slack, Discord, Teams, generic webhook
+├── assets.ts            # File glob and upload
+├── summary.ts           # GitHub Step Summary
+└── __tests__/           # Vitest unit tests
+```
+
+## Verification
+
+Before submitting: `npm run typecheck && npm test && npm run build`.

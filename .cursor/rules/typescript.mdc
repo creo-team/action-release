@@ -1,0 +1,32 @@
+# TypeScript Conventions
+
+## Strict Mode
+
+- `strict: true` in tsconfig — no shortcuts
+- No `any` — prefer `unknown` and narrow with type guards
+- `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns` enabled
+
+## Types
+
+- Use string literal unions for finite state sets:
+  ```typescript
+  type BumpType = 'major' | 'minor' | 'patch' | 'none';
+  type TagStrategy = 'full' | 'all' | 'full-and-minor';
+  type LlmProvider = 'openai' | 'anthropic' | 'openrouter';
+  ```
+- Use `satisfies` for type-safe const objects
+- Use `Record<K, V>` for exhaustive mappings
+- Validate all external input at boundaries (action inputs, API responses, file reads)
+
+## Functions
+
+- Explicit return types on exported functions
+- Prefer pure functions — isolate side effects (API calls, I/O)
+- Use `async/await` over raw promises
+- Early returns for guard clauses
+
+## Testing
+
+- Mock external dependencies (`@actions/core`, `@actions/github`, `fetch`)
+- Test edge cases: empty input, missing tags, API errors, malformed data
+- Each test file mirrors its source module

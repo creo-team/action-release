@@ -1,0 +1,27 @@
+# Testing Conventions
+
+## Framework
+
+Vitest with globals enabled. Tests in `src/__tests__/`.
+
+## Patterns
+
+- `describe('moduleName')` → `describe('functionName')` → `it('returns X when Y')`
+- Test pure logic first, mock I/O
+- Mock `@actions/core` for input/output testing
+- Mock `@actions/github` for API testing — never call real APIs
+- Mock `fetch` for LLM and webhook testing
+
+## Coverage
+
+- Every exported function must have tests
+- Test success paths, error paths, and edge cases
+- Optional features (LLM, webhooks, codenames) must test graceful failure
+
+## Running
+
+```bash
+npm test              # Single run
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```

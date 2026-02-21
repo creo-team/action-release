@@ -1,0 +1,47 @@
+# Code Style
+
+## Core Principles
+
+- **Zero magic values** — constants and string literal unions for all identifiers, thresholds, and config
+- Functions under 50 lines, prefer early returns over nested conditionals
+- `null` for intentionally empty values, `undefined` for "not provided"
+- Descriptive variable names (`previousTag` not `pt`)
+- Section headers with `// ============================================================================`
+
+## Naming Conventions
+
+| Element | Convention | Example |
+|---|-----|---|
+| Files | kebab-case | `previous-release.ts`, `changelog-file.ts` |
+| Functions | camelCase | `resolveVersion()`, `detectBump()` |
+| Interfaces/Types | PascalCase | `ReleaseConfig`, `BumpResult` |
+| Constants | UPPER_SNAKE | `DEFAULT_BUMP`, `LLM_PROVIDERS`, `MAX_RETRIES` |
+| String unions | PascalCase values | `type TagStrategy = 'full' \| 'all' \| 'full-and-minor'` |
+
+## Import Order
+
+1. Node built-ins (`path`, `fs`)
+2. External packages (`@actions/core`, `@actions/github`)
+3. Internal modules (`./types`, `./version`)
+
+## File Organization
+
+One concern per file. Every module exports pure functions where possible. Side effects (API calls, file I/O) are isolated and mockable.
+
+| File | Role |
+|---|---|
+| `types.ts` | Shared types, constants, string literal unions |
+| `inputs.ts` | Parse and validate action inputs |
+| `*.ts` | Feature modules (version, bump, tags, etc.) |
+| `__tests__/*.test.ts` | Vitest unit tests |
+
+## Error Handling
+
+- `core.setFailed()` for fatal errors only
+- `core.warning()` for non-fatal issues
+- Optional features (LLM, webhooks, codenames) must never crash the action
+- Validate inputs early, fail with clear messages
+
+## Commits
+
+Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`. Keep focused on a single change.
