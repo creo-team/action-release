@@ -42,7 +42,7 @@
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
-    "@creo-team/eslint-config": "^2.4.1",
+    "@creo-team/eslint-config": "^2.4.3",
     "@types/node": "^22.13.4",
     "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^4.0.18",
