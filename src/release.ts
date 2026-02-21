@@ -168,6 +168,8 @@ async function findExistingRelease(
 // Tag Operations
 // ============================================================================
 
+const REF_ALREADY_EXISTS = 'Reference already exists';
+
 export async function createOrUpdateTag(
   octokit: Octokit,
   owner: string,
@@ -193,7 +195,22 @@ export async function createOrUpdateTag(
     });
 
     core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`);
-  } catch {
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : String(err ?? 'Unknown error');
+
+    if (message.includes(REF_ALREADY_EXISTS)) {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref,
+        sha,
+        force: true,
+      });
+      core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`);
+      return;
+    }
+
     await octokit.rest.git.createRef({
       owner,
       repo,
