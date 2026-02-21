@@ -243,7 +243,7 @@ export interface TemplateVariables {
 // ============================================================================
 
 export const DEFAULT_INITIAL_VERSION = '0.1.0'
-export const DEFAULT_TAG_PREFIX = 'v'
+export const DEFAULT_TAG_PREFIX = ''
 export const DEFAULT_VERSION_PATTERN = '"version":\\s*"([^"]+)"'
 export const DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md'
 export const SHORT_SHA_LENGTH = 7

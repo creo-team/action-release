@@ -65476,7 +65476,7 @@ Put breaking changes first with a brief warning. Professional tone.`;
 // Defaults
 // ============================================================================
 exports.DEFAULT_INITIAL_VERSION = '0.1.0';
-exports.DEFAULT_TAG_PREFIX = 'v';
+exports.DEFAULT_TAG_PREFIX = '';
 exports.DEFAULT_VERSION_PATTERN = '"version":\\s*"([^"]+)"';
 exports.DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md';
 exports.SHORT_SHA_LENGTH = 7;
