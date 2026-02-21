@@ -38,6 +38,17 @@ module.exports = [
     },
   },
   {
+    files: ['src/**/*.ts'],
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-param': 'off',
+      'jsdoc/require-param-description': 'off',
+      'jsdoc/require-returns': 'off',
+      'jsdoc/require-description-complete-sentence': 'off',
+      'complexity': 'off',
+    },
+  },
+  {
     files: ['src/index.ts'],
     rules: {
       'max-lines': 'off',

@@ -9,10 +9,11 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint .",
+    "lint": "npx eslint .",
     "prepare": "npm run build",
     "all": "npm run typecheck && npm run lint && npm test && npm run build",
-    "fix": "eslint . --fix"
+    "upgrade:all": "npx npm-check-updates -u && npm install",
+    "fix": "npm run lint -- --fix"
   },
   "repository": {
     "type": "git",
@@ -41,11 +42,15 @@
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
-    "@creo-team/eslint-config": "^2.0.0",
+    "@creo-team/eslint-config": "^2.4.1",
     "@types/node": "^22.13.4",
     "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.39.3",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
