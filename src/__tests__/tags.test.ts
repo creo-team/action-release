@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { buildCompareUrl, formatMajorTag, formatMinorTag, formatTag, getTagsForStrategy, stripPrefix } from '../tags'
+import {
+	buildCompareUrl,
+	formatMajorTag,
+	formatMinorTag,
+	formatTag,
+	getTagsForStrategy,
+	stripPrefix,
+	stripSuffix,
+} from '../tags'
 import type { SemVer } from '../types'
 
 const version: SemVer = { major: 1, minor: 2, patch: 3 }
@@ -21,25 +29,41 @@ describe('formatTag', () => {
 		const pre: SemVer = { major: 1, minor: 0, patch: 0, prerelease: 'beta.2' }
 		expect(formatTag(pre, 'v')).toBe('v1.0.0-beta.2')
 	})
+
+	it('formats with suffix', () => {
+		expect(formatTag(version, '', '-app')).toBe('1.2.3-app')
+	})
+
+	it('formats with prefix and suffix', () => {
+		expect(formatTag(version, 'v', '-rc')).toBe('v1.2.3-rc')
+	})
 })
 
 describe('formatMajorTag', () => {
 	it('formats major tag', () => {
-		expect(formatMajorTag(version, 'v')).toBe('v1')
+		expect(formatMajorTag(version, 'v', '')).toBe('v1')
 	})
 
 	it('formats without prefix', () => {
-		expect(formatMajorTag(version, '')).toBe('1')
+		expect(formatMajorTag(version, '', '')).toBe('1')
+	})
+
+	it('formats with suffix', () => {
+		expect(formatMajorTag(version, '', '-app')).toBe('1-app')
 	})
 })
 
 describe('formatMinorTag', () => {
 	it('formats minor tag', () => {
-		expect(formatMinorTag(version, 'v')).toBe('v1.2')
+		expect(formatMinorTag(version, 'v', '')).toBe('v1.2')
 	})
 
 	it('formats without prefix', () => {
-		expect(formatMinorTag(version, '')).toBe('1.2')
+		expect(formatMinorTag(version, '', '')).toBe('1.2')
+	})
+
+	it('formats with suffix', () => {
+		expect(formatMinorTag(version, '', '-app')).toBe('1.2-app')
 	})
 })
 
@@ -64,6 +88,14 @@ describe('getTagsForStrategy', () => {
 		const pre: SemVer = { major: 1, minor: 0, patch: 0, prerelease: 'rc.1' }
 		expect(getTagsForStrategy(pre, 'v', 'full')).toEqual(['v1.0.0-rc.1'])
 	})
+
+	it('applies suffix to all tags', () => {
+		expect(getTagsForStrategy(version, '', 'all', '-app')).toEqual(['1.2.3-app', '1.2-app', '1-app'])
+	})
+
+	it('applies prefix and suffix together', () => {
+		expect(getTagsForStrategy(version, 'v', 'full', '-rc')).toEqual(['v1.2.3-rc'])
+	})
 })
 
 describe('stripPrefix', () => {
@@ -77,6 +109,20 @@ describe('stripPrefix', () => {
 
 	it('strips custom prefix', () => {
 		expect(stripPrefix('release-1.0.0', 'release-')).toBe('1.0.0')
+	})
+})
+
+describe('stripSuffix', () => {
+	it('strips suffix', () => {
+		expect(stripSuffix('1.2.3-app', '-app')).toBe('1.2.3')
+	})
+
+	it('returns original when no suffix match', () => {
+		expect(stripSuffix('1.2.3', '-app')).toBe('1.2.3')
+	})
+
+	it('returns original when suffix is empty', () => {
+		expect(stripSuffix('1.2.3', '')).toBe('1.2.3')
 	})
 })
 

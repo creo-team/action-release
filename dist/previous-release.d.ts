@@ -5,5 +5,6 @@ export declare function findPreviousTag(octokit: Octokit, owner: string, repo: s
     matchPattern?: string;
     specificTag?: string;
     tagPrefix?: string;
+    tagSuffix?: string;
 }): Promise<null | string>;
 export {};

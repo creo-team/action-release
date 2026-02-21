@@ -58,6 +58,7 @@ export interface ActionConfig {
     tagMatchPattern?: string;
     tagPrefix: string;
     tagStrategy: TagStrategy;
+    tagSuffix: string;
     targetCommitish?: string;
     token: string;
     updateChangelog: boolean;
@@ -112,6 +113,7 @@ export interface TemplateVariables {
 }
 export declare const DEFAULT_INITIAL_VERSION = "0.1.0";
 export declare const DEFAULT_TAG_PREFIX = "";
+export declare const DEFAULT_TAG_SUFFIX = "";
 export declare const DEFAULT_VERSION_PATTERN = "\"version\":\\s*\"([^\"]+)\"";
 export declare const DEFAULT_CHANGELOG_PATH = "CHANGELOG.md";
 export declare const SHORT_SHA_LENGTH = 7;

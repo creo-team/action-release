@@ -17,13 +17,14 @@ export async function findPreviousTag(
 		matchPattern?: string
 		specificTag?: string
 		tagPrefix?: string
+		tagSuffix?: string
 	} = {},
 ): Promise<null | string> {
 	switch (strategy) {
 		case 'latest-release':
 			return findLatestRelease(octokit, owner, repo)
 		case 'latest-tag':
-			return findLatestSemVerTag(octokit, owner, repo, options.tagPrefix)
+			return findLatestSemVerTag(octokit, owner, repo, options.tagPrefix, options.tagSuffix)
 		case 'specific-tag':
 			return options.specificTag ?? null
 		case 'tag-pattern':
@@ -53,12 +54,16 @@ async function findLatestSemVerTag(
 	owner: string,
 	repo: string,
 	prefix?: string,
+	suffix?: string,
 ): Promise<null | string> {
 	const tags = await listTags(octokit, owner, repo)
 
 	const semverTags = tags
 		.map((tag) => {
-			const versionStr = prefix ? tag.replace(prefix, '') : tag
+			let versionStr = prefix ? tag.replace(prefix, '') : tag
+			if (suffix && versionStr.endsWith(suffix)) {
+				versionStr = versionStr.slice(0, -suffix.length)
+			}
 			const parsed = parseSemVer(versionStr)
 
 			return parsed ? { parsed, tag } : null

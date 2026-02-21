@@ -18,6 +18,7 @@ import {
 	DEFAULT_LLM_MAX_TOKENS,
 	DEFAULT_LLM_PROMPT,
 	DEFAULT_TAG_PREFIX,
+	DEFAULT_TAG_SUFFIX,
 	DEFAULT_VERSION_PATTERN,
 	STABLE_CHANNEL,
 } from './types'
@@ -182,6 +183,7 @@ export function parseInputs(): ActionConfig {
 
 		tagPrefix: core.getInput('tag-prefix') ?? DEFAULT_TAG_PREFIX,
 		tagStrategy,
+		tagSuffix: core.getInput('tag-suffix') ?? DEFAULT_TAG_SUFFIX,
 		targetCommitish: parseOptional(core.getInput('target-commitish')),
 		token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
 

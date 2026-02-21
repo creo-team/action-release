@@ -64119,6 +64119,7 @@ async function run() {
         matchPattern: config.tagMatchPattern,
         specificTag: config.previousTag,
         tagPrefix: config.tagPrefix,
+        tagSuffix: config.tagSuffix,
     });
     core.info(previousTag ? `Previous tag: ${previousTag}` : 'No previous tag found');
     // ============================================================================
@@ -64143,7 +64144,8 @@ async function run() {
                     core.info(`No previous tag — using initial version ${config.initialVersion}`);
                 }
                 else {
-                    const previousVersion = (0, version_1.parseSemVer)(previousTag.replace(config.tagPrefix, ''));
+                    const stripped = (0, tags_1.stripSuffix)(previousTag.replace(config.tagPrefix, ''), config.tagSuffix);
+                    const previousVersion = (0, version_1.parseSemVer)(stripped);
                     if (!previousVersion) {
                         throw new Error(`Cannot parse previous tag "${previousTag}" as semver`);
                     }
@@ -64179,7 +64181,7 @@ async function run() {
         version = (0, version_1.applyChannel)(version, config.channel, channelNumber);
     }
     const versionStr = (0, version_1.formatSemVer)(version);
-    const tags = (0, tags_1.getTagsForStrategy)(version, config.tagPrefix, config.tagStrategy);
+    const tags = (0, tags_1.getTagsForStrategy)(version, config.tagPrefix, config.tagStrategy, config.tagSuffix);
     const primaryTag = tags[0];
     core.info(`Version: ${versionStr}`);
     core.info(`Tags: ${tags.join(', ')}`);
@@ -64566,6 +64568,7 @@ function parseInputs() {
         tagMatchPattern: parseOptional(core.getInput('tag-match-pattern')),
         tagPrefix: core.getInput('tag-prefix') ?? types_1.DEFAULT_TAG_PREFIX,
         tagStrategy,
+        tagSuffix: core.getInput('tag-suffix') ?? types_1.DEFAULT_TAG_SUFFIX,
         targetCommitish: parseOptional(core.getInput('target-commitish')),
         token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
         updateChangelog: parseBool(core.getInput('update-changelog')),
@@ -64938,7 +64941,7 @@ async function findPreviousTag(octokit, owner, repo, strategy, options = {}) {
         case 'latest-release':
             return findLatestRelease(octokit, owner, repo);
         case 'latest-tag':
-            return findLatestSemVerTag(octokit, owner, repo, options.tagPrefix);
+            return findLatestSemVerTag(octokit, owner, repo, options.tagPrefix, options.tagSuffix);
         case 'specific-tag':
             return options.specificTag ?? null;
         case 'tag-pattern':
@@ -64960,11 +64963,14 @@ async function findLatestRelease(octokit, owner, repo) {
         return null;
     }
 }
-async function findLatestSemVerTag(octokit, owner, repo, prefix) {
+async function findLatestSemVerTag(octokit, owner, repo, prefix, suffix) {
     const tags = await listTags(octokit, owner, repo);
     const semverTags = tags
         .map((tag) => {
-        const versionStr = prefix ? tag.replace(prefix, '') : tag;
+        let versionStr = prefix ? tag.replace(prefix, '') : tag;
+        if (suffix && versionStr.endsWith(suffix)) {
+            versionStr = versionStr.slice(0, -suffix.length);
+        }
         const parsed = (0, version_1.parseSemVer)(versionStr);
         return parsed ? { parsed, tag } : null;
     })
@@ -65347,42 +65353,46 @@ exports.formatMinorTag = formatMinorTag;
 exports.formatTag = formatTag;
 exports.getTagsForStrategy = getTagsForStrategy;
 exports.stripPrefix = stripPrefix;
+exports.stripSuffix = stripSuffix;
 // ============================================================================
 // Tag Generation
 // ============================================================================
 function buildCompareUrl(owner, repo, previousTag, newTag) {
     return `https://github.com/${owner}/${repo}/compare/${previousTag}...${newTag}`;
 }
-function formatMajorTag(version, prefix) {
-    return `${prefix}${version.major}`;
+function formatMajorTag(version, prefix, suffix) {
+    return `${prefix}${version.major}${suffix}`;
 }
-function formatMinorTag(version, prefix) {
-    return `${prefix}${version.major}.${version.minor}`;
+function formatMinorTag(version, prefix, suffix) {
+    return `${prefix}${version.major}.${version.minor}${suffix}`;
 }
 // ============================================================================
 // Strategy
 // ============================================================================
-function formatTag(version, prefix) {
+function formatTag(version, prefix, suffix = '') {
     const base = `${version.major}.${version.minor}.${version.patch}`;
     const versionStr = version.prerelease ? `${base}-${version.prerelease}` : base;
-    return `${prefix}${versionStr}`;
+    return `${prefix}${versionStr}${suffix}`;
 }
 // ============================================================================
 // Parsing
 // ============================================================================
-function getTagsForStrategy(version, prefix, strategy) {
-    const fullTag = formatTag(version, prefix);
+function getTagsForStrategy(version, prefix, strategy, suffix = '') {
+    const fullTag = formatTag(version, prefix, suffix);
     switch (strategy) {
         case 'all':
-            return [fullTag, formatMinorTag(version, prefix), formatMajorTag(version, prefix)];
+            return [fullTag, formatMinorTag(version, prefix, suffix), formatMajorTag(version, prefix, suffix)];
         case 'full':
             return [fullTag];
         case 'full-and-minor':
-            return [fullTag, formatMinorTag(version, prefix)];
+            return [fullTag, formatMinorTag(version, prefix, suffix)];
     }
 }
 function stripPrefix(tag, prefix) {
     return tag.startsWith(prefix) ? tag.slice(prefix.length) : tag;
+}
+function stripSuffix(tag, suffix) {
+    return suffix && tag.endsWith(suffix) ? tag.slice(0, -suffix.length) : tag;
 }
 
 
@@ -65447,7 +65457,7 @@ function renderTemplate(template, variables) {
 // Bump Types
 // ============================================================================
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MAX_CODENAME_RETRIES = exports.SHORT_SHA_LENGTH = exports.DEFAULT_CHANGELOG_PATH = exports.DEFAULT_VERSION_PATTERN = exports.DEFAULT_TAG_PREFIX = exports.DEFAULT_INITIAL_VERSION = exports.DEFAULT_LLM_PROMPT = exports.DEFAULT_LLM_MAX_TOKENS = exports.LLM_ENDPOINTS = exports.LLM_DEFAULT_MODELS = exports.STABLE_CHANNEL = exports.BUMP_PRIORITY = void 0;
+exports.MAX_CODENAME_RETRIES = exports.SHORT_SHA_LENGTH = exports.DEFAULT_CHANGELOG_PATH = exports.DEFAULT_VERSION_PATTERN = exports.DEFAULT_TAG_SUFFIX = exports.DEFAULT_TAG_PREFIX = exports.DEFAULT_INITIAL_VERSION = exports.DEFAULT_LLM_PROMPT = exports.DEFAULT_LLM_MAX_TOKENS = exports.LLM_ENDPOINTS = exports.LLM_DEFAULT_MODELS = exports.STABLE_CHANNEL = exports.BUMP_PRIORITY = void 0;
 exports.BUMP_PRIORITY = {
     major: 3,
     minor: 2,
@@ -65477,6 +65487,7 @@ Put breaking changes first with a brief warning. Professional tone.`;
 // ============================================================================
 exports.DEFAULT_INITIAL_VERSION = '0.1.0';
 exports.DEFAULT_TAG_PREFIX = '';
+exports.DEFAULT_TAG_SUFFIX = '';
 exports.DEFAULT_VERSION_PATTERN = '"version":\\s*"([^"]+)"';
 exports.DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md';
 exports.SHORT_SHA_LENGTH = 7;

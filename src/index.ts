@@ -11,7 +11,7 @@ import {
 	readVersionFromPackageJson,
 } from './version'
 import { detectBumpFromMessages } from './bump'
-import { buildCompareUrl, getTagsForStrategy } from './tags'
+import { buildCompareUrl, getTagsForStrategy, stripSuffix } from './tags'
 import { findPreviousTag } from './previous-release'
 import { buildTemplateVariables, renderTemplate } from './template'
 import { formatRawChanges, generateChangelog } from './changelog'
@@ -149,6 +149,7 @@ async function run(): Promise<void> {
 		matchPattern: config.tagMatchPattern,
 		specificTag: config.previousTag,
 		tagPrefix: config.tagPrefix,
+		tagSuffix: config.tagSuffix,
 	})
 
 	core.info(previousTag ? `Previous tag: ${previousTag}` : 'No previous tag found')
@@ -183,7 +184,8 @@ async function run(): Promise<void> {
 					version = parseSemVer(config.initialVersion)!
 					core.info(`No previous tag — using initial version ${config.initialVersion}`)
 				} else {
-					const previousVersion = parseSemVer(previousTag.replace(config.tagPrefix, ''))
+					const stripped = stripSuffix(previousTag.replace(config.tagPrefix, ''), config.tagSuffix)
+					const previousVersion = parseSemVer(stripped)
 					if (!previousVersion) {
 						throw new Error(`Cannot parse previous tag "${previousTag}" as semver`)
 					}
@@ -241,7 +243,7 @@ async function run(): Promise<void> {
 	}
 
 	const versionStr = formatSemVer(version)
-	const tags = getTagsForStrategy(version, config.tagPrefix, config.tagStrategy)
+	const tags = getTagsForStrategy(version, config.tagPrefix, config.tagStrategy, config.tagSuffix)
 	const primaryTag = tags[0]
 
 	core.info(`Version: ${versionStr}`)

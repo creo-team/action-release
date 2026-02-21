@@ -1,7 +1,8 @@
 import type { SemVer, TagStrategy } from './types';
 export declare function buildCompareUrl(owner: string, repo: string, previousTag: string, newTag: string): string;
-export declare function formatMajorTag(version: SemVer, prefix: string): string;
-export declare function formatMinorTag(version: SemVer, prefix: string): string;
-export declare function formatTag(version: SemVer, prefix: string): string;
-export declare function getTagsForStrategy(version: SemVer, prefix: string, strategy: TagStrategy): string[];
+export declare function formatMajorTag(version: SemVer, prefix: string, suffix: string): string;
+export declare function formatMinorTag(version: SemVer, prefix: string, suffix: string): string;
+export declare function formatTag(version: SemVer, prefix: string, suffix?: string): string;
+export declare function getTagsForStrategy(version: SemVer, prefix: string, strategy: TagStrategy, suffix?: string): string[];
 export declare function stripPrefix(tag: string, prefix: string): string;
+export declare function stripSuffix(tag: string, suffix: string): string;

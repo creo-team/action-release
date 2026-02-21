@@ -56,6 +56,10 @@ inputs:
     description: 'Tag prefix. Empty (default) produces 1.0.0. Use "v" for v1.0.0.'
     required: false
     default: ''
+  tag-suffix:
+    description: 'Tag suffix. Empty (default) produces 1.0.0. Use "-app" for 1.0.0-app.'
+    required: false
+    default: ''
   tag-strategy:
     description: 'full (v1.0.9 only), all (v1, v1.0, v1.0.9), or full-and-minor.'
     required: false
