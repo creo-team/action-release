@@ -63633,16 +63633,16 @@ exports.formatRawChanges = formatRawChanges;
 exports.generateChangelog = generateChangelog;
 exports.parseCommitMessage = parseCommitMessage;
 const CHANGELOG_SECTIONS = [
-    { emoji: '💥', title: 'Breaking Changes', types: ['breaking'] },
-    { emoji: '✨', title: 'Features', types: ['feat'] },
-    { emoji: '🐛', title: 'Bug Fixes', types: ['fix'] },
-    { emoji: '⚡', title: 'Performance', types: ['perf'] },
-    { emoji: '📚', title: 'Documentation', types: ['docs'] },
-    { emoji: '♻️', title: 'Refactoring', types: ['refactor'] },
-    { emoji: '🧪', title: 'Testing', types: ['test'] },
-    { emoji: '🏗️', title: 'Build & CI', types: ['build', 'ci'] },
-    { emoji: '🔧', title: 'Chores', types: ['chore'] },
-    { emoji: '💄', title: 'Styles', types: ['style'] },
+    { title: 'Breaking Changes', types: ['breaking'] },
+    { title: 'Features', types: ['feat'] },
+    { title: 'Bug Fixes', types: ['fix'] },
+    { title: 'Performance', types: ['perf'] },
+    { title: 'Documentation', types: ['docs'] },
+    { title: 'Refactoring', types: ['refactor'] },
+    { title: 'Testing', types: ['test'] },
+    { title: 'Build & CI', types: ['build', 'ci'] },
+    { title: 'Chores', types: ['chore'] },
+    { title: 'Styles', types: ['style'] },
 ];
 const COMMIT_REGEX = /^(\w+)(?:\(([^)]+)\))?(!)?:\s*(.+)/;
 // ============================================================================
@@ -63686,7 +63686,7 @@ function generateChangelog(commitMessages, commitHashes) {
             const hash = c.hash ? ` (${c.hash})` : '';
             return `- ${scope}${c.description}${hash}`;
         });
-        sections.push(`### ${section.emoji} ${section.title}\n\n${lines.join('\n')}`);
+        sections.push(`### ${section.title}\n\n${lines.join('\n')}`);
     }
     const uncategorized = parsed.filter((c) => {
         return !CHANGELOG_SECTIONS.some((s) => s.types.includes(c.type) || (s.types.includes('breaking') && c.breaking));
@@ -65277,65 +65277,70 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.writeStepSummary = writeStepSummary;
 const core = __importStar(__nccwpck_require__(7484));
-// ============================================================================
-// GitHub Step Summary
-// ============================================================================
 async function writeStepSummary(variables, options) {
-    const summary = core.summary;
+    const markdown = buildSummaryMarkdown(variables, options);
+    await core.summary.addRaw(markdown).write();
+}
+// ============================================================================
+// Markdown Builder
+// ============================================================================
+function buildSummaryMarkdown(variables, options) {
+    const lines = [];
+    const title = options.codename ? `${variables.version} "${options.codename}"` : variables.version;
+    const status = options.dryRun ? 'Dry Run' : options.created ? 'Released' : 'Skipped';
+    lines.push(`# ${title}`);
+    lines.push('');
     if (options.dryRun) {
-        summary.addHeading('🔍 Release Dry Run', 2);
-        summary.addRaw('> No tags, releases, or commits were created. This is a preview.\n\n');
+        lines.push('> **Dry run** — no tags, releases, or commits were created.');
+        lines.push('');
     }
-    else if (options.created) {
-        summary.addHeading('🚀 Release Created', 2);
+    else if (!options.created) {
+        lines.push('> **Skipped** — this release already exists.');
+        lines.push('');
     }
-    else {
-        summary.addHeading('⏭️ Release Skipped', 2);
-        summary.addRaw('> The release already exists.\n\n');
+    lines.push(`${status} from \`${variables.branch}\` by @${variables.actor} on ${variables.date}`);
+    lines.push('');
+    const details = [`**Tag** \`${variables.tag}\``];
+    if (variables.previous_tag) {
+        details.push(`**Previous** \`${variables.previous_tag}\``);
     }
-    summary.addTable([
-        [
-            { data: 'Property', header: true },
-            { data: 'Value', header: true },
-        ],
-        ['Tag', `\`${variables.tag}\``],
-        ['Version', `\`${variables.version}\``],
-        ['Previous Tag', variables.previous_tag ? `\`${variables.previous_tag}\`` : '(none)'],
-        ['Date', variables.date],
-        ['Branch', `\`${variables.branch}\``],
-        ['Actor', `@${variables.actor}`],
-    ]);
     if (options.tags.length > 1) {
-        summary.addHeading('Tags', 3);
-        summary.addList(options.tags.map((t) => `\`${t}\``));
+        details.push(`**All tags** ${options.tags.map((t) => `\`${t}\``).join(' ')}`);
     }
-    if (options.codename) {
-        summary.addHeading('Codename', 3);
-        summary.addRaw(`**${options.codename}**\n\n`);
-    }
-    if (variables.compare_url) {
-        summary.addLink('Compare changes', variables.compare_url);
-        summary.addRaw('\n\n');
-    }
-    if (variables.release_url && !options.dryRun) {
-        summary.addLink('View release', variables.release_url);
-        summary.addRaw('\n\n');
-    }
-    if (options.changelog) {
-        summary.addHeading('Changelog', 3);
-        summary.addRaw(options.changelog);
-        summary.addRaw('\n\n');
+    lines.push(details.join(' · '));
+    lines.push('');
+    const links = [];
+    if (variables.compare_url)
+        links.push(`[Compare changes](${variables.compare_url})`);
+    if (variables.release_url && !options.dryRun)
+        links.push(`[View release](${variables.release_url})`);
+    if (links.length > 0) {
+        lines.push(links.join(' · '));
+        lines.push('');
     }
     if (options.llmSummary) {
-        summary.addHeading('AI Summary', 3);
-        summary.addRaw(options.llmSummary);
-        summary.addRaw('\n\n');
+        lines.push('---');
+        lines.push('');
+        lines.push(options.llmSummary);
+        lines.push('');
+    }
+    if (options.changelog) {
+        lines.push('---');
+        lines.push('');
+        lines.push(options.changelog);
+        lines.push('');
     }
     if (options.uploadedAssets && options.uploadedAssets.length > 0) {
-        summary.addHeading('Assets', 3);
-        summary.addList(options.uploadedAssets);
+        lines.push('---');
+        lines.push('');
+        lines.push('### Assets');
+        lines.push('');
+        for (const asset of options.uploadedAssets) {
+            lines.push(`- ${asset}`);
+        }
+        lines.push('');
     }
-    await summary.write();
+    return lines.join('\n');
 }
 
 

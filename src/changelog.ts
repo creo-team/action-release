@@ -3,22 +3,21 @@
 // ============================================================================
 
 interface ChangelogSection {
-	emoji: string
 	title: string
 	types: string[]
 }
 
 const CHANGELOG_SECTIONS: ChangelogSection[] = [
-	{ emoji: '💥', title: 'Breaking Changes', types: ['breaking'] },
-	{ emoji: '✨', title: 'Features', types: ['feat'] },
-	{ emoji: '🐛', title: 'Bug Fixes', types: ['fix'] },
-	{ emoji: '⚡', title: 'Performance', types: ['perf'] },
-	{ emoji: '📚', title: 'Documentation', types: ['docs'] },
-	{ emoji: '♻️', title: 'Refactoring', types: ['refactor'] },
-	{ emoji: '🧪', title: 'Testing', types: ['test'] },
-	{ emoji: '🏗️', title: 'Build & CI', types: ['build', 'ci'] },
-	{ emoji: '🔧', title: 'Chores', types: ['chore'] },
-	{ emoji: '💄', title: 'Styles', types: ['style'] },
+	{ title: 'Breaking Changes', types: ['breaking'] },
+	{ title: 'Features', types: ['feat'] },
+	{ title: 'Bug Fixes', types: ['fix'] },
+	{ title: 'Performance', types: ['perf'] },
+	{ title: 'Documentation', types: ['docs'] },
+	{ title: 'Refactoring', types: ['refactor'] },
+	{ title: 'Testing', types: ['test'] },
+	{ title: 'Build & CI', types: ['build', 'ci'] },
+	{ title: 'Chores', types: ['chore'] },
+	{ title: 'Styles', types: ['style'] },
 ]
 
 interface ParsedCommit {
@@ -83,7 +82,7 @@ export function generateChangelog(commitMessages: string[], commitHashes?: strin
 			return `- ${scope}${c.description}${hash}`
 		})
 
-		sections.push(`### ${section.emoji} ${section.title}\n\n${lines.join('\n')}`)
+		sections.push(`### ${section.title}\n\n${lines.join('\n')}`)
 	}
 
 	const uncategorized = parsed.filter((c) => {

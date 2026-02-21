@@ -1,5 +1,5 @@
 import type { TemplateVariables } from './types';
-export declare function writeStepSummary(variables: TemplateVariables, options: {
+interface SummaryOptions {
     changelog?: string;
     codename?: string;
     created: boolean;
@@ -7,4 +7,6 @@ export declare function writeStepSummary(variables: TemplateVariables, options: 
     llmSummary?: string;
     tags: string[];
     uploadedAssets?: string[];
-}): Promise<void>;
+}
+export declare function writeStepSummary(variables: TemplateVariables, options: SummaryOptions): Promise<void>;
+export {};

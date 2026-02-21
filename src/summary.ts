@@ -5,79 +5,87 @@ import type { TemplateVariables } from './types'
 // GitHub Step Summary
 // ============================================================================
 
-export async function writeStepSummary(
-	variables: TemplateVariables,
-	options: {
-		changelog?: string
-		codename?: string
-		created: boolean
-		dryRun: boolean
-		llmSummary?: string
-		tags: string[]
-		uploadedAssets?: string[]
-	},
-): Promise<void> {
-	const summary = core.summary
+interface SummaryOptions {
+	changelog?: string
+	codename?: string
+	created: boolean
+	dryRun: boolean
+	llmSummary?: string
+	tags: string[]
+	uploadedAssets?: string[]
+}
+
+export async function writeStepSummary(variables: TemplateVariables, options: SummaryOptions): Promise<void> {
+	const markdown = buildSummaryMarkdown(variables, options)
+	await core.summary.addRaw(markdown).write()
+}
+
+// ============================================================================
+// Markdown Builder
+// ============================================================================
+
+function buildSummaryMarkdown(variables: TemplateVariables, options: SummaryOptions): string {
+	const lines: string[] = []
+
+	const title = options.codename ? `${variables.version} "${options.codename}"` : variables.version
+	const status = options.dryRun ? 'Dry Run' : options.created ? 'Released' : 'Skipped'
+
+	lines.push(`# ${title}`)
+	lines.push('')
 
 	if (options.dryRun) {
-		summary.addHeading('🔍 Release Dry Run', 2)
-		summary.addRaw('> No tags, releases, or commits were created. This is a preview.\n\n')
-	} else if (options.created) {
-		summary.addHeading('🚀 Release Created', 2)
-	} else {
-		summary.addHeading('⏭️ Release Skipped', 2)
-		summary.addRaw('> The release already exists.\n\n')
+		lines.push('> **Dry run** — no tags, releases, or commits were created.')
+		lines.push('')
+	} else if (!options.created) {
+		lines.push('> **Skipped** — this release already exists.')
+		lines.push('')
 	}
 
-	summary.addTable([
-		[
-			{ data: 'Property', header: true },
-			{ data: 'Value', header: true },
-		],
-		['Tag', `\`${variables.tag}\``],
-		['Version', `\`${variables.version}\``],
-		['Previous Tag', variables.previous_tag ? `\`${variables.previous_tag}\`` : '(none)'],
-		['Date', variables.date],
-		['Branch', `\`${variables.branch}\``],
-		['Actor', `@${variables.actor}`],
-	])
+	lines.push(`${status} from \`${variables.branch}\` by @${variables.actor} on ${variables.date}`)
+	lines.push('')
 
+	const details = [`**Tag** \`${variables.tag}\``]
+	if (variables.previous_tag) {
+		details.push(`**Previous** \`${variables.previous_tag}\``)
+	}
 	if (options.tags.length > 1) {
-		summary.addHeading('Tags', 3)
-		summary.addList(options.tags.map((t) => `\`${t}\``))
+		details.push(`**All tags** ${options.tags.map((t) => `\`${t}\``).join(' ')}`)
 	}
+	lines.push(details.join(' · '))
+	lines.push('')
 
-	if (options.codename) {
-		summary.addHeading('Codename', 3)
-		summary.addRaw(`**${options.codename}**\n\n`)
-	}
-
-	if (variables.compare_url) {
-		summary.addLink('Compare changes', variables.compare_url)
-		summary.addRaw('\n\n')
-	}
-
-	if (variables.release_url && !options.dryRun) {
-		summary.addLink('View release', variables.release_url)
-		summary.addRaw('\n\n')
-	}
-
-	if (options.changelog) {
-		summary.addHeading('Changelog', 3)
-		summary.addRaw(options.changelog)
-		summary.addRaw('\n\n')
+	const links: string[] = []
+	if (variables.compare_url) links.push(`[Compare changes](${variables.compare_url})`)
+	if (variables.release_url && !options.dryRun) links.push(`[View release](${variables.release_url})`)
+	if (links.length > 0) {
+		lines.push(links.join(' · '))
+		lines.push('')
 	}
 
 	if (options.llmSummary) {
-		summary.addHeading('AI Summary', 3)
-		summary.addRaw(options.llmSummary)
-		summary.addRaw('\n\n')
+		lines.push('---')
+		lines.push('')
+		lines.push(options.llmSummary)
+		lines.push('')
+	}
+
+	if (options.changelog) {
+		lines.push('---')
+		lines.push('')
+		lines.push(options.changelog)
+		lines.push('')
 	}
 
 	if (options.uploadedAssets && options.uploadedAssets.length > 0) {
-		summary.addHeading('Assets', 3)
-		summary.addList(options.uploadedAssets)
+		lines.push('---')
+		lines.push('')
+		lines.push('### Assets')
+		lines.push('')
+		for (const asset of options.uploadedAssets) {
+			lines.push(`- ${asset}`)
+		}
+		lines.push('')
 	}
 
-	await summary.write()
+	return lines.join('\n')
 }
