@@ -65081,18 +65081,22 @@ async function findExistingRelease(octokit, owner, repo, tag) {
 // Tag Operations
 // ============================================================================
 const REF_ALREADY_EXISTS = 'Reference already exists';
+/** Ref for getRef/updateRef (tags/v0.1.0); createRef needs refs/tags/v0.1.0 */
+const refForPath = (tag) => `tags/${tag}`;
+const refForCreate = (tag) => `refs/tags/${tag}`;
 async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
-    const ref = `refs/tags/${tag}`;
+    const pathRef = refForPath(tag);
+    const createRef = refForCreate(tag);
     try {
         await octokit.rest.git.getRef({
             owner,
             repo,
-            ref,
+            ref: pathRef,
         });
         await octokit.rest.git.updateRef({
             owner,
             repo,
-            ref,
+            ref: pathRef,
             sha,
             force: true,
         });
@@ -65103,7 +65107,7 @@ async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
             await octokit.rest.git.createRef({
                 owner,
                 repo,
-                ref,
+                ref: createRef,
                 sha,
             });
             core.info(`Created tag ${tag} → ${sha.substring(0, 7)}`);
@@ -65116,7 +65120,7 @@ async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
                 await octokit.rest.git.updateRef({
                     owner,
                     repo,
-                    ref,
+                    ref: pathRef,
                     sha,
                     force: true,
                 });

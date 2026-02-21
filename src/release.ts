@@ -170,6 +170,10 @@ async function findExistingRelease(
 
 const REF_ALREADY_EXISTS = 'Reference already exists';
 
+/** Ref for getRef/updateRef (tags/v0.1.0); createRef needs refs/tags/v0.1.0 */
+const refForPath = (tag: string): string => `tags/${tag}`;
+const refForCreate = (tag: string): string => `refs/tags/${tag}`;
+
 export async function createOrUpdateTag(
   octokit: Octokit,
   owner: string,
@@ -177,19 +181,20 @@ export async function createOrUpdateTag(
   tag: string,
   sha: string
 ): Promise<void> {
-  const ref = `refs/tags/${tag}`;
+  const pathRef = refForPath(tag);
+  const createRef = refForCreate(tag);
 
   try {
     await octokit.rest.git.getRef({
       owner,
       repo,
-      ref,
+      ref: pathRef,
     });
 
     await octokit.rest.git.updateRef({
       owner,
       repo,
-      ref,
+      ref: pathRef,
       sha,
       force: true,
     });
@@ -200,7 +205,7 @@ export async function createOrUpdateTag(
       await octokit.rest.git.createRef({
         owner,
         repo,
-        ref,
+        ref: createRef,
         sha,
       });
       core.info(`Created tag ${tag} → ${sha.substring(0, 7)}`);
@@ -214,7 +219,7 @@ export async function createOrUpdateTag(
         await octokit.rest.git.updateRef({
           owner,
           repo,
-          ref,
+          ref: pathRef,
           sha,
           force: true,
         });
