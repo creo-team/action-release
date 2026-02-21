@@ -157,6 +157,7 @@ async function updateExistingRelease(
 // ============================================================================
 
 const REF_ALREADY_EXISTS = 'Reference already exists'
+const REF_UPDATE_FAILED = 'Reference update failed'
 
 /** Ref for getRef/updateRef (tags/v0.1.0); createRef needs refs/tags/v0.1.0 */
 const refForPath = (tag: string): string => `tags/${tag}`
@@ -188,7 +189,13 @@ export async function createOrUpdateTag(
 		})
 
 		core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`)
-	} catch {
+	} catch (updateErr) {
+		const msg = updateErr instanceof Error ? updateErr.message : typeof updateErr === 'string' ? updateErr : ''
+		if (msg.includes(REF_UPDATE_FAILED)) {
+			core.info(`Tag ${tag} exists but cannot be updated (e.g. release tag) — skipping`)
+
+			return
+		}
 		try {
 			await octokit.rest.git.createRef({
 				owner,
@@ -206,14 +213,24 @@ export async function createOrUpdateTag(
 						: 'Unknown error'
 
 			if (message.includes(REF_ALREADY_EXISTS)) {
-				await octokit.rest.git.updateRef({
-					force: true,
-					owner,
-					ref: pathRef,
-					repo,
-					sha,
-				})
-				core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`)
+				try {
+					await octokit.rest.git.updateRef({
+						force: true,
+						owner,
+						ref: pathRef,
+						repo,
+						sha,
+					})
+					core.info(`Updated tag ${tag} → ${sha.substring(0, 7)}`)
+				} catch (retryErr) {
+					const retryMsg =
+						retryErr instanceof Error ? retryErr.message : typeof retryErr === 'string' ? retryErr : ''
+					if (retryMsg.includes(REF_UPDATE_FAILED)) {
+						core.info(`Tag ${tag} exists but cannot be updated — skipping`)
+					} else {
+						throw retryErr
+					}
+				}
 			} else {
 				throw createErr
 			}
