@@ -1,15 +1,26 @@
+---
+description: Code style conventions, naming, and file organization
+globs:
+alwaysApply: true
+---
+
 # Code Style
 
 ## Core Principles
 
+- **Never nest** — early returns, flat code. If you're indenting more than once inside a function, refactor
+- **No narration comments** — code speaks for itself. Only comment non-obvious intent, trade-offs, or constraints. Never `// Get the tag`, `// Return the result`, or section banners
 - **Zero magic values** — constants and string literal unions for all identifiers, thresholds, and config
-- Functions under 50 lines, prefer early returns over nested conditionals
-- `null` for intentionally empty values, `undefined` for "not provided"
-- Descriptive variable names (`previousTag` not `pt`)
+- **Deduplicate ruthlessly** — shared data goes in shared modules, not copied between files
+- **Simple over clever** — readable beats terse. Flat logic over nested ternaries
+- **Functions under 50 lines** — if it's longer, extract
+- **`null` for intentionally empty, `undefined` for "not provided"**
+- **Descriptive variable names** — `previousTag` not `pt`
+
 ## Naming Conventions
 
 | Element | Convention | Example |
-|---|-----|---|
+|---------|-----------|---------|
 | Files | kebab-case | `previous-release.ts`, `changelog-file.ts` |
 | Functions | camelCase | `resolveVersion()`, `detectBump()` |
 | Interfaces/Types | PascalCase | `ReleaseConfig`, `BumpResult` |
@@ -27,7 +38,7 @@
 One concern per file. Every module exports pure functions where possible. Side effects (API calls, file I/O) are isolated and mockable.
 
 | File | Role |
-|---|---|
+|------|------|
 | `types.ts` | Shared types, constants, string literal unions |
 | `inputs.ts` | Parse and validate action inputs |
 | `*.ts` | Feature modules (version, bump, tags, etc.) |
@@ -40,6 +51,8 @@ One concern per file. Every module exports pure functions where possible. Side e
 - Optional features (LLM, webhooks, codenames) must never crash the action
 - Validate inputs early, fail with clear messages
 
-## Commits
+## Creo Standards
 
-Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`. Keep focused on a single change.
+- **ESLint**: `@creo-team/eslint-config` in every project
+- **Versions**: bare semver — never prefix with `v`
+- **Commits**: conventional commits (`feat:`, `fix:`, `refactor:`), one change per commit

@@ -27,10 +27,14 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 
 ### Code Style
 
+- **Never nest** — early returns, flat code. If you're indenting more than once inside a function, refactor
+- **No narration comments** — code speaks for itself. Only comment non-obvious intent, trade-offs, or constraints. No section banners, no `// Parse the input`
 - **Zero magic values** — enums and constants for all identifiers, thresholds, and config
 - **Finite states** → string literal unions or enums (`BumpType`, `TagStrategy`, `LlmProvider`)
 - **Configuration** → named constants (e.g. `DEFAULT_INITIAL_VERSION`, `MAX_LLM_TOKENS`)
-- Functions under 50 lines, prefer early returns over nested conditionals
+- **Deduplicate ruthlessly** — shared data in shared modules, not copied between files
+- **Simple over clever** — readable beats terse. Flat logic over nested ternaries
+- Functions under 50 lines — if it's longer, extract
 - `null` for intentionally empty values, `undefined` for "not provided"
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 

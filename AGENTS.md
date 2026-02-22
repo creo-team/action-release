@@ -16,8 +16,12 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 
 ## Core Rules
 
+- **Never nest** — early returns, flat code. If you're indenting more than once, refactor
+- **No narration comments** — code speaks for itself. Only comment non-obvious intent or trade-offs. No section banners
 - **Zero magic values** — constants and string literal unions for all identifiers
-- Functions under 50 lines, prefer early returns
+- **Deduplicate ruthlessly** — shared data in shared modules, not copied between files
+- **Simple over clever** — readable beats terse
+- Functions under 50 lines — if it's longer, extract
 - No `any` — prefer `unknown` and narrow with type guards
 - `null` for intentionally empty, `undefined` for "not provided"
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
