@@ -34,6 +34,10 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - **Configuration** → named constants (e.g. `DEFAULT_INITIAL_VERSION`, `MAX_LLM_TOKENS`)
 - **Deduplicate ruthlessly** — shared data in shared modules, not copied between files
 - **Simple over clever** — readable beats terse. Flat logic over nested ternaries
+- **Verb-driven function names** — prefer `get`, `remove`, `create`, `list`, `put`, `update` over `fetch`, `delete`, `post`
+- **Types in dedicated files** — interfaces, enums, and types live in `types.ts`
+- **Defensive guards** — double-check assumptions with `if` checks and logging before proceeding
+- **Generators when appropriate** — use generator functions for iteration and lazy evaluation where they simplify the code
 - Functions under 50 lines — if it's longer, extract
 - `null` for intentionally empty values, `undefined` for "not provided"
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`

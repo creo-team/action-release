@@ -21,6 +21,9 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 - **Zero magic values** — constants and string literal unions for all identifiers
 - **Deduplicate ruthlessly** — shared data in shared modules, not copied between files
 - **Simple over clever** — readable beats terse
+- **Verb-driven names** — `get`, `remove`, `create`, `list` over `fetch`, `delete`, `post`
+- **Types in `types.ts`** — never scatter type definitions across implementation files
+- **Defensive guards** — verify assumptions with `if` checks and logging
 - Functions under 50 lines — if it's longer, extract
 - No `any` — prefer `unknown` and narrow with type guards
 - `null` for intentionally empty, `undefined` for "not provided"
