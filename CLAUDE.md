@@ -42,6 +42,12 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - `null` for intentionally empty values, `undefined` for "not provided"
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 
+### Documentation Standards
+
+- **Concise docs** — markdown files should be scannable, not walls of text. Link to code rather than duplicating it. State tenets, not tutorials
+- **Single source of truth** — every fact lives in one place. Don't repeat info across README, CLAUDE.md, and AGENTS.md — reference it
+- **Inline links liberally** — link to files, other docs, and sections. README opens with what it is and how to use it; details come after
+
 ### TypeScript
 
 - Strict mode, no `any` — prefer `unknown` and narrow with type guards
