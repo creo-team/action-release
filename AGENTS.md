@@ -13,6 +13,7 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 | All changes | [CLAUDE.md](CLAUDE.md) — single source of truth for conventions |
 | Action spec | [action.yml](action.yml) — all inputs and outputs |
 | User docs | [README.md](README.md) — examples and feature reference |
+| GitHub Actions | [.cursor/rules/github-actions.mdc](.cursor/rules/github-actions.mdc) — linking conventions |
 
 ## Core Rules
 
@@ -27,6 +28,8 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 - **Simple over clever** — readable beats terse
 - **Verb-driven names** — `get`, `remove`, `create`, `list` over `fetch`, `delete`, `post`
 - **Types in `types.ts`** — never scatter type definitions across implementation files
+- **Named imports** — prefer `{ thing } from 'thing'` over `import *`
+- **Named exports** — prefer named exports over `export default` (except framework-convention files)
 - **Defensive guards** — verify assumptions with `if` checks and logging
 - Functions under 50 lines — if it's longer, extract
 - No `any` — prefer `unknown` and narrow with type guards

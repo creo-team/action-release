@@ -41,6 +41,11 @@ alwaysApply: true
 2. External packages (`@actions/core`, `@actions/github`)
 3. Internal modules (`./types`, `./version`)
 
+## Imports and Exports
+
+- **Named imports** — prefer `{ thing } from 'thing'` over `import *`. Never use `import *` when named imports exist.
+- **Named exports** — prefer named exports over `export default` in TS and JS. Exception: framework-convention files where default is required.
+
 ## File Organization
 
 One concern per file. Every module exports pure functions where possible. Side effects (API calls, file I/O) are isolated and mockable.
@@ -74,5 +79,6 @@ Markdown docs (README, CLAUDE.md, AGENTS.md) follow these tenets:
 
 - **ESLint**: `@creo-team/eslint-config` in every project
 - **Versions**: bare semver — never prefix with `v`
+- **GitHub Actions**: when referencing actions in docs or workflows, link to the repo or action and version when elegant and subtle. See [github-actions.mdc](github-actions.mdc)
 - **Version bumps** — increment `package.json` version with every push to `main`. Feature branches: one bump before merge
 - **Commits**: conventional commits (`feat:`, `fix:`, `refactor:`), one change per commit

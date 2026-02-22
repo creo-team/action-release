@@ -40,6 +40,8 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - **Simple over clever** — readable beats terse. Flat logic over nested ternaries
 - **Verb-driven function names** — prefer `get`, `remove`, `create`, `list`, `put`, `update` over `fetch`, `delete`, `post`
 - **Types in dedicated files** — interfaces, enums, and types live in `types.ts`
+- **Named imports** — prefer `{ thing } from 'thing'` over `import *`. Never use `import *` when named imports exist
+- **Named exports** — prefer named exports over `export default`. Exception: framework-convention files where default is required
 - **Defensive guards** — double-check assumptions with `if` checks and logging before proceeding
 - **Generators when appropriate** — use generator functions for iteration and lazy evaluation where they simplify the code
 - Functions under 50 lines — if it's longer, extract
@@ -119,6 +121,7 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 |------|---------|
 | `action.yml` | Action metadata — all inputs, outputs, branding |
 | `src/index.ts` | Entry point and orchestration |
+| `src/action-footer.ts` | Release body footer (Created by action@version) |
 | `src/types.ts` | Shared types and constants |
 | `src/inputs.ts` | Input parsing and validation |
 | `src/llm.ts` | LLM integration (3 providers) |
