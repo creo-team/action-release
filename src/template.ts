@@ -4,6 +4,7 @@ const VARIABLE_REGEX = /\{\{\s*(\w+)\s*\}\}/g
 
 export function buildTemplateVariables(partial: Partial<TemplateVariables>): TemplateVariables {
 	return {
+		action_release_footer: '',
 		actor: '',
 		branch: '',
 		changelog: '',

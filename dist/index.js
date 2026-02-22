@@ -63331,6 +63331,74 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 7375:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ACTION_RELEASES_URL = exports.ACTION_REPO_URL = exports.ACTION_REPO = void 0;
+exports.buildActionFooter = buildActionFooter;
+const fs = __importStar(__nccwpck_require__(9896));
+const path = __importStar(__nccwpck_require__(6928));
+exports.ACTION_REPO = 'creo-team/action-release';
+exports.ACTION_REPO_URL = 'https://github.com/creo-team/action-release';
+exports.ACTION_RELEASES_URL = 'https://github.com/creo-team/action-release/releases/tag';
+function getActionVersion() {
+    try {
+        const pkgPath = path.join(__dirname, '..', 'package.json');
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+        return typeof pkg.version === 'string' ? pkg.version : 'unknown';
+    }
+    catch {
+        return 'unknown';
+    }
+}
+function buildActionFooter() {
+    const version = getActionVersion();
+    const repoLink = `[${exports.ACTION_REPO}](${exports.ACTION_REPO_URL})`;
+    const versionLink = `[${version}](${exports.ACTION_RELEASES_URL}/${version})`;
+    return `---
+
+Created by ${repoLink}@${versionLink}`;
+}
+
+
+/***/ }),
+
 /***/ 5462:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -63403,9 +63471,6 @@ async function uploadAssets(octokit, options) {
     }
     return uploaded;
 }
-// ============================================================================
-// File Resolution
-// ============================================================================
 async function deleteExistingAssets(octokit, options, newFiles) {
     const newNames = new Set(newFiles.map((f) => path.basename(f)));
     const { data: existingAssets } = await octokit.rest.repos.listReleaseAssets({
@@ -63424,9 +63489,6 @@ async function deleteExistingAssets(octokit, options, newFiles) {
         }
     }
 }
-// ============================================================================
-// Upload
-// ============================================================================
 async function resolveFiles(patterns, workingDirectory) {
     const lines = patterns
         .split('\n')
@@ -63437,9 +63499,6 @@ async function resolveFiles(patterns, workingDirectory) {
     const files = await globber.glob();
     return files.filter((f) => fs.statSync(f).isFile());
 }
-// ============================================================================
-// Delete Existing (for overwrite)
-// ============================================================================
 async function uploadSingleAsset(octokit, options, filePath, name) {
     const data = fs.readFileSync(filePath);
     const size = fs.statSync(filePath).size;
@@ -63470,9 +63529,6 @@ exports.detectConventionalBump = detectConventionalBump;
 exports.detectKeywordBump = detectKeywordBump;
 exports.highestBump = highestBump;
 const types_1 = __nccwpck_require__(8522);
-// ============================================================================
-// Conventional Commit Parsing
-// ============================================================================
 const CONVENTIONAL_COMMIT_REGEX = /^(\w+)(?:\([\w-]+\))?(!)?:\s/;
 const BREAKING_CHANGE_FOOTER = 'BREAKING CHANGE';
 function detectBumpFromMessages(messages, majorKeywords, minorKeywords, patchKeywords) {
@@ -63497,9 +63553,6 @@ function detectBumpFromMessages(messages, majorKeywords, minorKeywords, patchKey
         type: result,
     };
 }
-// ============================================================================
-// Keyword Matching
-// ============================================================================
 function detectConventionalBump(message) {
     const match = CONVENTIONAL_COMMIT_REGEX.exec(message);
     if (message.includes(BREAKING_CHANGE_FOOTER))
@@ -63512,9 +63565,6 @@ function detectConventionalBump(message) {
         return 'patch';
     return 'none';
 }
-// ============================================================================
-// Aggregate Bump Detection
-// ============================================================================
 function detectKeywordBump(text, majorKeywords, minorKeywords, patchKeywords) {
     const lowerText = text.toLowerCase();
     for (const keyword of majorKeywords) {
@@ -63586,17 +63636,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatChangelogEntry = formatChangelogEntry;
 exports.updateChangelogFile = updateChangelogFile;
 const fs = __importStar(__nccwpck_require__(9896));
-// ============================================================================
-// Changelog File Update
-// ============================================================================
 const CHANGELOG_HEADER = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n';
 const CHANGELOG_SEPARATOR = '\n---\n\n';
 function formatChangelogEntry(version, date, content) {
     return `## [${version}] - ${date}\n\n${content}\n`;
 }
-// ============================================================================
-// Formatting
-// ============================================================================
 function updateChangelogFile(filePath, version, date, changelogContent) {
     const entry = formatChangelogEntry(version, date, changelogContent);
     if (!fs.existsSync(filePath)) {
@@ -63625,9 +63669,6 @@ function insertEntry(existing, entry) {
 
 "use strict";
 
-// ============================================================================
-// Conventional Changelog Generation
-// ============================================================================
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatRawChanges = formatRawChanges;
 exports.generateChangelog = generateChangelog;
@@ -63645,9 +63686,6 @@ const CHANGELOG_SECTIONS = [
     { title: 'Styles', types: ['style'] },
 ];
 const COMMIT_REGEX = /^(\w+)(?:\(([^)]+)\))?(!)?:\s*(.+)/;
-// ============================================================================
-// Parsing
-// ============================================================================
 function formatRawChanges(commitMessages, commitHashes) {
     return commitMessages
         .map((msg, i) => {
@@ -63657,9 +63695,6 @@ function formatRawChanges(commitMessages, commitHashes) {
     })
         .join('\n');
 }
-// ============================================================================
-// Generation
-// ============================================================================
 function generateChangelog(commitMessages, commitHashes) {
     const parsed = [];
     for (let i = 0; i < commitMessages.length; i++) {
@@ -63700,9 +63735,6 @@ function generateChangelog(commitMessages, commitHashes) {
     }
     return sections.join('\n\n');
 }
-// ============================================================================
-// Raw Changes (non-conventional)
-// ============================================================================
 function parseCommitMessage(message) {
     const firstLine = message.split('\n')[0].trim();
     const match = COMMIT_REGEX.exec(firstLine);
@@ -63730,9 +63762,6 @@ exports.generateCodename = generateCodename;
 exports.getExistingReleaseNames = getExistingReleaseNames;
 const unique_names_generator_1 = __nccwpck_require__(3719);
 const types_1 = __nccwpck_require__(8522);
-// ============================================================================
-// Theme Word Lists
-// ============================================================================
 const THE_OFFICE_NAMES = [
     'Threat Level Midnight',
     'Prison Mike',
@@ -63893,9 +63922,6 @@ const SHIP_NAMES = [
     'Dreadnought',
     'Leviathan',
 ];
-// ============================================================================
-// Generation
-// ============================================================================
 function generateCodename(theme, existingNames, customWords) {
     if (theme === 'off')
         return '';
@@ -63955,9 +63981,6 @@ function generateCandidate(theme, customWords) {
             return pickRandom(THE_OFFICE_NAMES);
     }
 }
-// ============================================================================
-// Fetch Existing Release Names
-// ============================================================================
 function pickRandom(list) {
     if (list.length === 0)
         return 'Unknown';
@@ -64019,14 +64042,12 @@ const changelog_1 = __nccwpck_require__(8397);
 const changelog_file_1 = __nccwpck_require__(1428);
 const codename_1 = __nccwpck_require__(9133);
 const llm_1 = __nccwpck_require__(1908);
+const action_footer_1 = __nccwpck_require__(7375);
 const release_1 = __nccwpck_require__(4202);
 const assets_1 = __nccwpck_require__(5462);
 const notifications_1 = __nccwpck_require__(3759);
 const summary_1 = __nccwpck_require__(8855);
 const types_1 = __nccwpck_require__(8522);
-// ============================================================================
-// Main
-// ============================================================================
 function collectBumpTexts(bumpSource, messages) {
     const context = github.context;
     switch (bumpSource) {
@@ -64053,9 +64074,6 @@ function collectBumpTexts(bumpSource, messages) {
             return messages;
     }
 }
-// ============================================================================
-// Helpers
-// ============================================================================
 async function getCommitData(octokit, owner, repo, headSha, previousTag, includeDiff) {
     if (!previousTag) {
         return { diff: null, hashes: [], messages: [] };
@@ -64114,9 +64132,6 @@ async function run() {
     const octokit = github.getOctokit(config.token);
     const { owner, repo } = github.context.repo;
     const sha = github.context.sha;
-    // ============================================================================
-    // 1. Find previous release
-    // ============================================================================
     const previousTag = await (0, previous_release_1.findPreviousTag)(octokit, owner, repo, config.previousReleaseStrategy, {
         matchPattern: config.tagMatchPattern,
         specificTag: config.previousTag,
@@ -64124,13 +64139,7 @@ async function run() {
         tagSuffix: config.tagSuffix,
     });
     core.info(previousTag ? `Previous tag: ${previousTag}` : 'No previous tag found');
-    // ============================================================================
-    // 2. Collect commits since previous tag
-    // ============================================================================
     const { diff, hashes, messages } = await getCommitData(octokit, owner, repo, sha, previousTag, config.llmContext === 'diff' || config.llmContext === 'both');
-    // ============================================================================
-    // 3. Resolve version
-    // ============================================================================
     let version;
     if (config.version) {
         const parsed = (0, version_1.parseSemVer)(config.version);
@@ -64187,9 +64196,6 @@ async function run() {
                 break;
             }
         }
-    // ============================================================================
-    // 4. Apply channel (pre-release)
-    // ============================================================================
     if (config.channel !== types_1.STABLE_CHANNEL) {
         const channelNumber = await getNextChannelNumber(octokit, owner, repo, version, config.channel, config.tagPrefix);
         version = (0, version_1.applyChannel)(version, config.channel, channelNumber);
@@ -64201,23 +64207,14 @@ async function run() {
         throw new Error('No tags generated');
     core.info(`Version: ${versionStr}`);
     core.info(`Tags: ${tags.join(', ')}`);
-    // ============================================================================
-    // 5. Generate changelog
-    // ============================================================================
     const changelogMd = config.changelog ? (0, changelog_1.generateChangelog)(messages, hashes) : '';
     const rawChanges = (0, changelog_1.formatRawChanges)(messages, hashes);
-    // ============================================================================
-    // 6. Generate codename
-    // ============================================================================
     let codename = '';
     if (config.codename !== 'off') {
         const existingNames = await (0, codename_1.getExistingReleaseNames)(octokit, owner, repo);
         codename = (0, codename_1.generateCodename)(config.codename, existingNames, config.codenameWords);
         core.info(`Codename: ${codename}`);
     }
-    // ============================================================================
-    // 7. Generate LLM summary
-    // ============================================================================
     let llmSummary = '';
     if (config.llmReleaseNotes && config.llmApiKey) {
         llmSummary = await (0, llm_1.generateLlmReleaseNotes)({
@@ -64234,11 +64231,10 @@ async function run() {
             repo: `${owner}/${repo}`,
         });
     }
-    // ============================================================================
-    // 8. Build template variables
-    // ============================================================================
     const compareUrl = previousTag ? (0, tags_1.buildCompareUrl)(owner, repo, previousTag, primaryTag) : '';
+    const actionFooter = (0, action_footer_1.buildActionFooter)();
     const templateVars = (0, template_1.buildTemplateVariables)({
+        action_release_footer: actionFooter,
         actor: github.context.actor,
         branch: github.context.ref.replace('refs/heads/', ''),
         changelog: changelogMd,
@@ -64260,9 +64256,6 @@ async function run() {
         tag: primaryTag,
         version: versionStr,
     });
-    // ============================================================================
-    // 9. Build release body
-    // ============================================================================
     const DEFAULT_BODY_TEMPLATE = "## What's Changed\n\n{{changelog}}\n\n**Full Changelog**: {{compare_url}}";
     let body = '';
     if (config.bodyTemplate) {
@@ -64278,9 +64271,7 @@ async function run() {
     else if (config.changelog) {
         body = (0, template_1.renderTemplate)(DEFAULT_BODY_TEMPLATE, templateVars);
     }
-    // ============================================================================
-    // 10. Build release name
-    // ============================================================================
+    body = body ? `${body}\n\n${actionFooter}` : actionFooter;
     let releaseName;
     if (config.name) {
         releaseName = (0, template_1.renderTemplate)(config.name, templateVars);
@@ -64292,9 +64283,6 @@ async function run() {
         releaseName = primaryTag;
     }
     templateVars.release_name = releaseName;
-    // ============================================================================
-    // 11. Dry run check
-    // ============================================================================
     if (config.dryRun) {
         core.info('Dry run — no tags or releases will be created');
         setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, true, false);
@@ -64308,15 +64296,9 @@ async function run() {
         });
         return;
     }
-    // ============================================================================
-    // 12. Create tags
-    // ============================================================================
     for (const tag of tags) {
         await (0, release_1.createOrUpdateTag)(octokit, owner, repo, tag, sha);
     }
-    // ============================================================================
-    // 13. Create release
-    // ============================================================================
     const releaseResult = await (0, release_1.createRelease)(octokit, {
         body,
         discussionCategory: config.discussionCategory,
@@ -64332,9 +64314,6 @@ async function run() {
         targetCommitish: config.targetCommitish,
     });
     templateVars.release_url = releaseResult.url;
-    // ============================================================================
-    // 14. Upload assets
-    // ============================================================================
     let uploadedAssets = [];
     if (config.files) {
         uploadedAssets = await (0, assets_1.uploadAssets)(octokit, {
@@ -64347,17 +64326,11 @@ async function run() {
             workingDirectory: config.workingDirectory,
         });
     }
-    // ============================================================================
-    // 15. Update changelog file
-    // ============================================================================
     if (config.updateChangelog) {
         const changelogContent = changelogMd || rawChanges;
         (0, changelog_file_1.updateChangelogFile)(config.changelogPath, versionStr, templateVars.date, changelogContent);
         core.info(`Updated ${config.changelogPath}`);
     }
-    // ============================================================================
-    // 16. Send notifications
-    // ============================================================================
     const hasNotifications = [
         config.notifications.slackWebhook,
         config.notifications.discordWebhook,
@@ -64367,9 +64340,6 @@ async function run() {
     if (hasNotifications && releaseResult.created) {
         await (0, notifications_1.sendNotifications)(config.notifications, templateVars);
     }
-    // ============================================================================
-    // 17. Write step summary
-    // ============================================================================
     await (0, summary_1.writeStepSummary)(templateVars, {
         changelog: changelogMd ? changelogMd : undefined,
         codename: codename ? codename : undefined,
@@ -64379,9 +64349,6 @@ async function run() {
         tags,
         uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
     });
-    // ============================================================================
-    // 18. Set outputs
-    // ============================================================================
     setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, false, releaseResult.created, releaseResult.url, releaseResult.id, releaseResult.uploadUrl);
 }
 function setOutputs(tag, version, semver, tags, previousTag, compareUrl, codename, releaseName, changelog, llmSummary, body, dryRun, created, url, id, uploadUrl) {
@@ -64410,9 +64377,6 @@ function setSkippedOutputs() {
     core.setOutput('tag', '');
     core.setOutput('version', '');
 }
-// ============================================================================
-// Entry
-// ============================================================================
 run().catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
     core.setFailed(message);
@@ -64463,9 +64427,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseInputs = parseInputs;
 const core = __importStar(__nccwpck_require__(7484));
 const types_1 = __nccwpck_require__(8522);
-// ============================================================================
-// Helpers
-// ============================================================================
 function parseBool(value) {
     return value.toLowerCase() === 'true';
 }
@@ -64485,9 +64446,6 @@ function parseWordsInput(value) {
     const words = trimmed.includes('\n') ? trimmed.split('\n') : trimmed.split(',');
     return words.map((w) => w.trim()).filter(Boolean);
 }
-// ============================================================================
-// Validation
-// ============================================================================
 const VALID_VERSION_SOURCES = ['auto', 'package-json', 'file'];
 const VALID_BUMP_TYPES = ['major', 'minor', 'patch', 'none'];
 const VALID_BUMP_SOURCES = ['commits', 'pr-title', 'pr-body', 'all'];
@@ -64606,9 +64564,6 @@ function parseInputs() {
         workingDirectory: core.getInput('working-directory') || '.',
     };
 }
-// ============================================================================
-// Parse Inputs
-// ============================================================================
 function validateEnum(value, valid, inputName) {
     const lower = value.toLowerCase().trim();
     if (!valid.includes(lower)) {
@@ -64662,9 +64617,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateLlmReleaseNotes = generateLlmReleaseNotes;
 const core = __importStar(__nccwpck_require__(7484));
 const types_1 = __nccwpck_require__(8522);
-// ============================================================================
-// Main Entry Point
-// ============================================================================
 async function generateLlmReleaseNotes(options, input) {
     const model = options.model ?? types_1.LLM_DEFAULT_MODELS[options.provider];
     const systemPrompt = options.systemPrompt ?? types_1.DEFAULT_LLM_PROMPT;
@@ -64685,9 +64637,6 @@ async function generateLlmReleaseNotes(options, input) {
         return '';
     }
 }
-// ============================================================================
-// Prompt Construction
-// ============================================================================
 function buildUserPrompt(input) {
     const parts = [
         `Repository: ${input.repo}`,
@@ -64739,9 +64688,6 @@ async function callAnthropic(apiKey, model, systemPrompt, userPrompt, maxTokens)
     const textBlock = data.content?.find((c) => c.type === 'text');
     return textBlock?.text?.trim() ?? '';
 }
-// ============================================================================
-// Anthropic API
-// ============================================================================
 async function callOpenAICompatible(endpoint, apiKey, model, systemPrompt, userPrompt, maxTokens, provider) {
     const headers = {
         Authorization: `Bearer ${apiKey}`,
@@ -64826,9 +64772,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.sendNotifications = sendNotifications;
 const core = __importStar(__nccwpck_require__(7484));
 const template_1 = __nccwpck_require__(5237);
-// ============================================================================
-// Notification Dispatcher
-// ============================================================================
 const DEFAULT_NOTIFICATION_TEMPLATE = '🚀 *{{repo}}* {{tag}} released! {{release_url}}';
 async function sendNotifications(config, variables) {
     const template = config.template ?? DEFAULT_NOTIFICATION_TEMPLATE;
@@ -64853,9 +64796,6 @@ async function sendNotifications(config, variables) {
         }
     }
 }
-// ============================================================================
-// Slack
-// ============================================================================
 async function postWebhook(url, payload, provider) {
     const response = await fetch(url, {
         body: JSON.stringify(payload),
@@ -64867,9 +64807,6 @@ async function postWebhook(url, payload, provider) {
     }
     core.info(`${provider} notification sent`);
 }
-// ============================================================================
-// Discord
-// ============================================================================
 async function sendDiscord(webhookUrl, message, variables) {
     const payload = {
         content: message,
@@ -64888,15 +64825,9 @@ async function sendDiscord(webhookUrl, message, variables) {
     };
     await postWebhook(webhookUrl, payload, 'Discord');
 }
-// ============================================================================
-// Microsoft Teams
-// ============================================================================
 async function sendGenericWebhook(url, variables) {
     await postWebhook(url, variables, 'Generic webhook');
 }
-// ============================================================================
-// Generic Webhook
-// ============================================================================
 async function sendSlack(webhookUrl, message, variables) {
     const payload = {
         blocks: [
@@ -64921,9 +64852,6 @@ async function sendSlack(webhookUrl, message, variables) {
     };
     await postWebhook(webhookUrl, payload, 'Slack');
 }
-// ============================================================================
-// HTTP Post
-// ============================================================================
 async function sendTeams(webhookUrl, message, variables) {
     const payload = {
         '@context': 'http://schema.org/extensions',
@@ -64975,9 +64903,6 @@ async function findPreviousTag(octokit, owner, repo, strategy, options = {}) {
             return findTagByPattern(octokit, owner, repo, options.matchPattern ?? '*');
     }
 }
-// ============================================================================
-// Strategies
-// ============================================================================
 async function findLatestRelease(octokit, owner, repo) {
     try {
         const { data } = await octokit.rest.repos.getLatestRelease({
@@ -65025,9 +64950,6 @@ async function findTagByPattern(octokit, owner, repo, pattern) {
     }
     return matching[0];
 }
-// ============================================================================
-// Helpers
-// ============================================================================
 function globToRegex(pattern) {
     const escaped = pattern
         .replace(/[.+^${}()|[\]\\]/g, '\\$&')
@@ -65097,9 +65019,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRelease = createRelease;
 exports.createOrUpdateTag = createOrUpdateTag;
 const core = __importStar(__nccwpck_require__(7484));
-// ============================================================================
-// Create New
-// ============================================================================
 async function createRelease(octokit, options) {
     const existing = await findExistingRelease(octokit, options.owner, options.repo, options.tag);
     if (existing) {
@@ -65107,9 +65026,6 @@ async function createRelease(octokit, options) {
     }
     return createNewRelease(octokit, options);
 }
-// ============================================================================
-// Handle Existing
-// ============================================================================
 async function createNewRelease(octokit, options) {
     core.info(`Creating release ${options.tag}`);
     const { data } = await octokit.rest.repos.createRelease({
@@ -65162,9 +65078,6 @@ async function handleExisting(octokit, options, existing) {
             return { ...existing, created: false };
     }
 }
-// ============================================================================
-// Find Existing
-// ============================================================================
 async function updateExistingRelease(octokit, options, releaseId) {
     core.info(`Updating existing release ${options.tag}`);
     const { data } = await octokit.rest.repos.updateRelease({
@@ -65185,9 +65098,6 @@ async function updateExistingRelease(octokit, options, releaseId) {
         url: data.html_url,
     };
 }
-// ============================================================================
-// Tag Operations
-// ============================================================================
 const REF_ALREADY_EXISTS = 'Reference already exists';
 const REF_UPDATE_FAILED = 'Reference update failed';
 /** Ref for getRef/updateRef (tags/v0.1.0); createRef needs refs/tags/v0.1.0 */
@@ -65308,9 +65218,6 @@ async function writeStepSummary(variables, options) {
     const markdown = buildSummaryMarkdown(variables, options);
     await core.summary.addRaw(markdown).write();
 }
-// ============================================================================
-// Markdown Builder
-// ============================================================================
 function buildSummaryMarkdown(variables, options) {
     const lines = [];
     const title = options.codename ? `${variables.version} "${options.codename}"` : variables.version;
@@ -65386,9 +65293,6 @@ exports.formatTag = formatTag;
 exports.getTagsForStrategy = getTagsForStrategy;
 exports.stripPrefix = stripPrefix;
 exports.stripSuffix = stripSuffix;
-// ============================================================================
-// Tag Generation
-// ============================================================================
 function buildCompareUrl(owner, repo, previousTag, newTag) {
     return `https://github.com/${owner}/${repo}/compare/${previousTag}...${newTag}`;
 }
@@ -65398,17 +65302,11 @@ function formatMajorTag(version, prefix, suffix) {
 function formatMinorTag(version, prefix, suffix) {
     return `${prefix}${version.major}.${version.minor}${suffix}`;
 }
-// ============================================================================
-// Strategy
-// ============================================================================
 function formatTag(version, prefix, suffix = '') {
     const base = `${version.major}.${version.minor}.${version.patch}`;
     const versionStr = version.prerelease ? `${base}-${version.prerelease}` : base;
     return `${prefix}${versionStr}${suffix}`;
 }
-// ============================================================================
-// Parsing
-// ============================================================================
 function getTagsForStrategy(version, prefix, strategy, suffix = '') {
     const fullTag = formatTag(version, prefix, suffix);
     switch (strategy) {
@@ -65438,12 +65336,10 @@ function stripSuffix(tag, suffix) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildTemplateVariables = buildTemplateVariables;
 exports.renderTemplate = renderTemplate;
-// ============================================================================
-// Mustache-Style Template Rendering
-// ============================================================================
 const VARIABLE_REGEX = /\{\{\s*(\w+)\s*\}\}/g;
 function buildTemplateVariables(partial) {
     return {
+        action_release_footer: '',
         actor: '',
         branch: '',
         changelog: '',
@@ -65467,9 +65363,6 @@ function buildTemplateVariables(partial) {
         ...partial,
     };
 }
-// ============================================================================
-// Template Variable Construction
-// ============================================================================
 function renderTemplate(template, variables) {
     return template.replace(VARIABLE_REGEX, (_match, key) => {
         const value = variables[key];
@@ -65485,9 +65378,6 @@ function renderTemplate(template, variables) {
 
 "use strict";
 
-// ============================================================================
-// Bump Types
-// ============================================================================
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MAX_CODENAME_RETRIES = exports.SHORT_SHA_LENGTH = exports.DEFAULT_CHANGELOG_PATH = exports.DEFAULT_VERSION_PATTERN = exports.DEFAULT_TAG_SUFFIX = exports.DEFAULT_TAG_PREFIX = exports.DEFAULT_INITIAL_VERSION = exports.DEFAULT_LLM_PROMPT = exports.DEFAULT_LLM_MAX_TOKENS = exports.LLM_ENDPOINTS = exports.LLM_DEFAULT_MODELS = exports.STABLE_CHANNEL = exports.BUMP_PRIORITY = void 0;
 exports.BUMP_PRIORITY = {
@@ -65496,9 +65386,6 @@ exports.BUMP_PRIORITY = {
     none: 0,
     patch: 1,
 };
-// ============================================================================
-// Pre-release Channels
-// ============================================================================
 exports.STABLE_CHANNEL = 'stable';
 exports.LLM_DEFAULT_MODELS = {
     anthropic: 'claude-sonnet-4-20250514',
@@ -65514,9 +65401,6 @@ exports.DEFAULT_LLM_MAX_TOKENS = 1024;
 exports.DEFAULT_LLM_PROMPT = `Write release notes from the commit history. Be clear and concise.
 Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
 Put breaking changes first with a brief warning. Professional tone.`;
-// ============================================================================
-// Defaults
-// ============================================================================
 exports.DEFAULT_INITIAL_VERSION = '0.1.0';
 exports.DEFAULT_TAG_PREFIX = '';
 exports.DEFAULT_TAG_SUFFIX = '';
@@ -65576,9 +65460,6 @@ exports.parseSemVer = parseSemVer;
 exports.readVersionFromFile = readVersionFromFile;
 exports.readVersionFromPackageJson = readVersionFromPackageJson;
 const fs = __importStar(__nccwpck_require__(9896));
-// ============================================================================
-// Parsing
-// ============================================================================
 const SEMVER_REGEX = /^v?(\d+)\.(\d+)\.(\d+)(?:-([\w.]+))?$/;
 function applyChannel(version, channel, prereleaseNumber) {
     return {
@@ -65607,22 +65488,13 @@ function compareSemVer(a, b) {
         return a.minor - b.minor;
     return a.patch - b.patch;
 }
-// ============================================================================
-// Bump
-// ============================================================================
 function formatSemVer(version) {
     const base = `${version.major}.${version.minor}.${version.patch}`;
     return version.prerelease ? `${base}-${version.prerelease}` : base;
 }
-// ============================================================================
-// Channel (pre-release)
-// ============================================================================
 function isValidSemVer(version) {
     return parseSemVer(version) !== null;
 }
-// ============================================================================
-// Version Sources
-// ============================================================================
 function parseSemVer(version) {
     const match = SEMVER_REGEX.exec(version.trim());
     if (!match)
@@ -65647,9 +65519,6 @@ function readVersionFromFile(filePath, pattern) {
     }
     return version;
 }
-// ============================================================================
-// Compare
-// ============================================================================
 function readVersionFromPackageJson(path) {
     const content = fs.readFileSync(path, 'utf-8');
     const pkg = JSON.parse(content);

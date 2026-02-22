@@ -1,0 +1,36 @@
+---
+description: GitHub Actions usage and documentation conventions
+globs:
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.md"
+  - "**/workflows/**"
+alwaysApply: false
+---
+
+# GitHub Actions
+
+## Linking Conventions
+
+When referencing GitHub Actions in workflows, docs, or code:
+
+- **Link to the repo or action** — when it's elegant and subtle, make the action name or version a link
+- **Link to the specific version** — when pinning (e.g. `@v1` or `@1.4.1`), link the version to the release/tag URL when possible
+- **Prefer subtle over noisy** — a single link in a footer or a small inline reference is better than repeated links
+
+## Examples
+
+- **Release footer:** `Created by [creo-team/action-release](repo)@[1.4.1](releases/tag/1.4.1)` — repo link + version link
+- **Workflow comment:** `# Uses creo-team/action-release — see https://github.com/creo-team/action-release`
+- **README:** `[creo-team/action-release@v1](https://github.com/creo-team/action-release)` — action ref as link
+
+## When to Link
+
+- Release notes, changelogs, and footers
+- README or docs that reference workflows
+- When the action is a key dependency
+
+## When to Skip
+
+- Inline workflows where the link would clutter
+- When the reference is already in a linked block

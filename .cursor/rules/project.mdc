@@ -8,6 +8,7 @@ Reusable GitHub Action for automated releases. TypeScript → `dist/index.js` vi
 - `AGENTS.md` — agent quick reference
 - `action.yml` — all inputs and outputs
 - `README.md` — user-facing documentation with examples
+- [github-actions.mdc](github-actions.mdc) — GitHub Actions linking conventions
 
 ## Key Resources
 
@@ -23,6 +24,7 @@ Reusable GitHub Action for automated releases. TypeScript → `dist/index.js` vi
 ```
 src/
 ├── index.ts             # Entry point
+├── action-footer.ts     # Release body footer (Created by action@version)
 ├── types.ts             # Shared types, constants, string unions
 ├── inputs.ts            # Parse @actions/core inputs
 ├── version.ts           # Version resolution (auto, package.json, file, manual)

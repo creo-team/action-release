@@ -18,6 +18,7 @@ import { formatRawChanges, generateChangelog } from './changelog'
 import { updateChangelogFile } from './changelog-file'
 import { generateCodename, getExistingReleaseNames } from './codename'
 import { generateLlmReleaseNotes } from './llm'
+import { buildActionFooter } from './action-footer'
 import { createOrUpdateTag, createRelease } from './release'
 import { uploadAssets } from './assets'
 import { sendNotifications } from './notifications'
@@ -268,8 +269,10 @@ async function run(): Promise<void> {
 	}
 
 	const compareUrl = previousTag ? buildCompareUrl(owner, repo, previousTag, primaryTag) : ''
+	const actionFooter = buildActionFooter()
 
 	const templateVars = buildTemplateVariables({
+		action_release_footer: actionFooter,
 		actor: github.context.actor,
 		branch: github.context.ref.replace('refs/heads/', ''),
 		changelog: changelogMd,
@@ -305,6 +308,8 @@ async function run(): Promise<void> {
 	} else if (config.changelog) {
 		body = renderTemplate(DEFAULT_BODY_TEMPLATE, templateVars)
 	}
+
+	body = body ? `${body}\n\n${actionFooter}` : actionFooter
 
 	let releaseName: string
 	if (config.name) {

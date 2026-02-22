@@ -165,6 +165,7 @@ export interface ReleaseResult {
 }
 
 export interface TemplateVariables {
+	action_release_footer: string
 	actor: string
 	branch: string
 	changelog: string

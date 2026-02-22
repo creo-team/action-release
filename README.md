@@ -588,7 +588,9 @@ Full list in [action.yml](./action.yml).
 
 Use in `body-template`, `name-template`, `notification-template`:
 
-`{{tag}}` `{{version}}` `{{commit_short}}` `{{previous_tag}}` `{{compare_url}}` `{{changelog}}` `{{llm_summary}}` `{{codename}}` `{{date}}` `{{repo}}` `{{branch}}` `{{actor}}` `{{release_url}}` `{{release_name}}` `{{changes}}`
+`{{tag}}` `{{version}}` `{{commit_short}}` `{{previous_tag}}` `{{compare_url}}` `{{changelog}}` `{{llm_summary}}` `{{codename}}` `{{date}}` `{{repo}}` `{{branch}}` `{{actor}}` `{{release_url}}` `{{release_name}}` `{{changes}}` `{{action_release_footer}}`
+
+Every release body includes a footer at the bottom: a horizontal rule followed by `Created by [creo-team/action-release](repo)@[version](release)`. Use `{{action_release_footer}}` to place it elsewhere in a custom `body-template`.
 
 ---
 
