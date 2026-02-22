@@ -64340,12 +64340,16 @@ async function run() {
     if (hasNotifications && releaseResult.created) {
         await (0, notifications_1.sendNotifications)(config.notifications, templateVars);
     }
+    const marketplaceHint = config.publishToMarketplace && releaseResult.created
+        ? { editUrl: `https://github.com/${owner}/${repo}/releases/edit/${encodeURIComponent(primaryTag)}` }
+        : undefined;
     await (0, summary_1.writeStepSummary)(templateVars, {
         changelog: changelogMd ? changelogMd : undefined,
         codename: codename ? codename : undefined,
         created: releaseResult.created,
         dryRun: false,
         llmSummary: llmSummary ? llmSummary : undefined,
+        marketplace: marketplaceHint,
         tags,
         uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
     });
@@ -64511,6 +64515,7 @@ function parseInputs() {
         defaultBump,
         discussionCategory: parseOptional(core.getInput('discussion-category')),
         draft: parseBool(core.getInput('draft')),
+        publishToMarketplace: parseBool(core.getInput('publish-to-marketplace')),
         dryRun: parseBool(core.getInput('dry-run')),
         failOnUnmatchedFiles: parseBool(core.getInput('fail-on-unmatched-files')),
         files: parseOptional(core.getInput('files')),
@@ -65213,6 +65218,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.writeStepSummary = writeStepSummary;
+exports.buildSummaryMarkdown = buildSummaryMarkdown;
 const core = __importStar(__nccwpck_require__(7484));
 async function writeStepSummary(variables, options) {
     const markdown = buildSummaryMarkdown(variables, options);
@@ -65272,6 +65278,17 @@ function buildSummaryMarkdown(variables, options) {
         for (const asset of options.uploadedAssets) {
             lines.push(`- ${asset}`);
         }
+        lines.push('');
+    }
+    if (options.marketplace && options.created && !options.dryRun) {
+        const { editUrl } = options.marketplace;
+        lines.push('---');
+        lines.push('');
+        lines.push('### Publish to GitHub Marketplace');
+        lines.push('');
+        lines.push(`[Edit this release](${editUrl}) → check **Publish this Action to the GitHub Marketplace** → select categories → Update release.`);
+        lines.push('');
+        lines.push('> Org owner must [accept the Marketplace Developer Agreement](https://docs.github.com/en/apps/github-marketplace/listing-an-app-on-github-marketplace/submitting-your-listing-for-publication) first.');
         lines.push('');
     }
     return lines.join('\n');

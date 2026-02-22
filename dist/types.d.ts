@@ -31,6 +31,7 @@ export interface ActionConfig {
     defaultBump: BumpType;
     discussionCategory?: string;
     draft: boolean;
+    publishToMarketplace: boolean;
     dryRun: boolean;
     failOnUnmatchedFiles: boolean;
     files?: string;

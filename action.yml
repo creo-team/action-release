@@ -100,6 +100,14 @@ inputs:
     default: 'skip'
 
   # ============================================================================
+  # GitHub Marketplace (Actions only — API does not support this; adds link + instructions)
+  # ============================================================================
+  publish-to-marketplace:
+    description: 'When true, adds a step-summary link to edit the release and publish to Marketplace. Org owner must accept the Marketplace Developer Agreement first.'
+    required: false
+    default: 'false'
+
+  # ============================================================================
   # Release Notes
   # ============================================================================
   body:

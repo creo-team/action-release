@@ -69,6 +69,9 @@ export interface ActionConfig {
 	// Release controls
 	draft: boolean
 
+	// Marketplace (API does not support this — flag adds link + instructions to step summary)
+	publishToMarketplace: boolean
+
 	// Behavior
 	dryRun: boolean
 	failOnUnmatchedFiles: boolean

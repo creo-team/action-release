@@ -34,6 +34,7 @@ jobs:
           tag-strategy: all
           changelog: 'true'
           if-exists: skip
+          publish-to-marketplace: true
           body-template: |
             ## What's Changed
 

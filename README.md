@@ -96,6 +96,16 @@ Check the **Summary** tab in the Actions run — you'll see the version, tag, an
     tag-strategy: all
 ```
 
+### Publish to GitHub Marketplace (Actions only)
+
+GitHub does not expose Marketplace publishing via the API. When `publish-to-marketplace: true`, the step summary includes a direct link to edit the release and a one-line reminder. Org owner must [accept the Marketplace Developer Agreement](https://docs.github.com/en/apps/github-marketplace/listing-an-app-on-github-marketplace/submitting-your-listing-for-publication) first.
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    publish-to-marketplace: true
+```
+
 ### Pre-release channel (beta, alpha, rc)
 
 ```yaml
@@ -141,6 +151,7 @@ Check the **Summary** tab in the Actions run — you'll see the version, tag, an
 | **Comparison URLs** | Full diff link between releases | Always in outputs |
 | **Version from Any File** | Extract with regex from Makefile, .env, etc. | `version-source: file` |
 | **Previous Release Strategy** | Control how the baseline is found | `previous-release-strategy` |
+| **Marketplace Publishing** | Step-summary link + one-line reminder to publish Action to Marketplace (API does not support this) | `publish-to-marketplace: true` |
 
 ---
 
@@ -569,6 +580,7 @@ Set `if-exists` to control behavior:
 | `llm-provider` | `openrouter` | `openrouter`, `openai`, `anthropic` |
 | `dry-run` | `false` | Preview without creating anything |
 | `if-exists` | `skip` | When tag exists: `skip`, `fail`, `update` |
+| `publish-to-marketplace` | `false` | Add step-summary link + reminder to publish Action to Marketplace |
 
 Full list in [action.yml](./action.yml).
 

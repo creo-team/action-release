@@ -137,6 +137,8 @@ export function parseInputs(): ActionConfig {
 
 		draft: parseBool(core.getInput('draft')),
 
+		publishToMarketplace: parseBool(core.getInput('publish-to-marketplace')),
+
 		dryRun: parseBool(core.getInput('dry-run')),
 		failOnUnmatchedFiles: parseBool(core.getInput('fail-on-unmatched-files')),
 		files: parseOptional(core.getInput('files')),

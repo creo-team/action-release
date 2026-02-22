@@ -1,12 +1,17 @@
 import * as core from '@actions/core'
 import type { TemplateVariables } from './types'
 
+interface MarketplaceHint {
+	editUrl: string
+}
+
 interface SummaryOptions {
 	changelog?: string
 	codename?: string
 	created: boolean
 	dryRun: boolean
 	llmSummary?: string
+	marketplace?: MarketplaceHint
 	tags: string[]
 	uploadedAssets?: string[]
 }
@@ -16,7 +21,7 @@ export async function writeStepSummary(variables: TemplateVariables, options: Su
 	await core.summary.addRaw(markdown).write()
 }
 
-function buildSummaryMarkdown(variables: TemplateVariables, options: SummaryOptions): string {
+export function buildSummaryMarkdown(variables: TemplateVariables, options: SummaryOptions): string {
 	const lines: string[] = []
 
 	const title = options.codename ? `${variables.version} "${options.codename}"` : variables.version
@@ -76,6 +81,20 @@ function buildSummaryMarkdown(variables: TemplateVariables, options: SummaryOpti
 		for (const asset of options.uploadedAssets) {
 			lines.push(`- ${asset}`)
 		}
+		lines.push('')
+	}
+
+	if (options.marketplace && options.created && !options.dryRun) {
+		const { editUrl } = options.marketplace
+		lines.push('---')
+		lines.push('')
+		lines.push('### Publish to GitHub Marketplace')
+		lines.push('')
+		lines.push(`[Edit this release](${editUrl}) → check **Publish this Action to the GitHub Marketplace** → select categories → Update release.`)
+		lines.push('')
+		lines.push(
+			'> Org owner must [accept the Marketplace Developer Agreement](https://docs.github.com/en/apps/github-marketplace/listing-an-app-on-github-marketplace/submitting-your-listing-for-publication) first.',
+		)
 		lines.push('')
 	}
 

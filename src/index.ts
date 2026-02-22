@@ -402,12 +402,18 @@ async function run(): Promise<void> {
 		await sendNotifications(config.notifications, templateVars)
 	}
 
+	const marketplaceHint =
+		config.publishToMarketplace && releaseResult.created
+			? { editUrl: `https://github.com/${owner}/${repo}/releases/edit/${encodeURIComponent(primaryTag)}` }
+			: undefined
+
 	await writeStepSummary(templateVars, {
 		changelog: changelogMd ? changelogMd : undefined,
 		codename: codename ? codename : undefined,
 		created: releaseResult.created,
 		dryRun: false,
 		llmSummary: llmSummary ? llmSummary : undefined,
+		marketplace: marketplaceHint,
 		tags,
 		uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
 	})
