@@ -33,6 +33,10 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - **Finite states** → string literal unions or enums (`BumpType`, `TagStrategy`, `LlmProvider`)
 - **Configuration** → named constants (e.g. `DEFAULT_INITIAL_VERSION`, `MAX_LLM_TOKENS`)
 - **Deduplicate ruthlessly** — shared data in shared modules, not copied between files
+- **TypeScript only** — no `.js`/`.jsx` in application code. Strict mode enabled
+- **Turbopack** — use `--turbopack` flag for Next.js dev and build (where applicable)
+- **Latest stable versions** — stay current with Next.js, React, and dependencies. Adopt new features early
+- **Skeleton loading** — every async boundary needs a loading state. Use `loading.tsx`, `Suspense` fallbacks, and skeleton UI. No blank screens
 - **Simple over clever** — readable beats terse. Flat logic over nested ternaries
 - **Verb-driven function names** — prefer `get`, `remove`, `create`, `list`, `put`, `update` over `fetch`, `delete`, `post`
 - **Types in dedicated files** — interfaces, enums, and types live in `types.ts`
