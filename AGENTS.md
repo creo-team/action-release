@@ -27,6 +27,7 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 - Functions under 50 lines — if it's longer, extract
 - No `any` — prefer `unknown` and narrow with type guards
 - `null` for intentionally empty, `undefined` for "not provided"
+- **Version bumps** — increment `package.json` version with every push to `main`. Feature branches: one bump before merge
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 
 ## Key Files
