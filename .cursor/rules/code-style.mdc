@@ -6,8 +6,6 @@
 - Functions under 50 lines, prefer early returns over nested conditionals
 - `null` for intentionally empty values, `undefined` for "not provided"
 - Descriptive variable names (`previousTag` not `pt`)
-- Section headers with `// ============================================================================`
-
 ## Naming Conventions
 
 | Element | Convention | Example |

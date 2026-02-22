@@ -23,10 +23,6 @@ import {
 	STABLE_CHANNEL,
 } from './types'
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
 function parseBool(value: string): boolean {
 	return value.toLowerCase() === 'true'
 }
@@ -50,10 +46,6 @@ function parseWordsInput(value: string): string[] | undefined {
 
 	return words.map((w) => w.trim()).filter(Boolean)
 }
-
-// ============================================================================
-// Validation
-// ============================================================================
 
 const VALID_VERSION_SOURCES: VersionSource[] = ['auto', 'package-json', 'file']
 const VALID_BUMP_TYPES: BumpType[] = ['major', 'minor', 'patch', 'none']
@@ -209,10 +201,6 @@ export function parseInputs(): ActionConfig {
 		workingDirectory: core.getInput('working-directory') || '.',
 	}
 }
-
-// ============================================================================
-// Parse Inputs
-// ============================================================================
 
 function validateEnum<T extends string>(value: string, valid: T[], inputName: string): T {
 	const lower = value.toLowerCase().trim() as T

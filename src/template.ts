@@ -1,9 +1,5 @@
 import type { TemplateVariables } from './types'
 
-// ============================================================================
-// Mustache-Style Template Rendering
-// ============================================================================
-
 const VARIABLE_REGEX = /\{\{\s*(\w+)\s*\}\}/g
 
 export function buildTemplateVariables(partial: Partial<TemplateVariables>): TemplateVariables {
@@ -31,10 +27,6 @@ export function buildTemplateVariables(partial: Partial<TemplateVariables>): Tem
 		...partial,
 	}
 }
-
-// ============================================================================
-// Template Variable Construction
-// ============================================================================
 
 export function renderTemplate(template: string, variables: TemplateVariables): string {
 	return template.replace(VARIABLE_REGEX, (_match, key: string) => {

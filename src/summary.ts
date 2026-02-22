@@ -1,10 +1,6 @@
 import * as core from '@actions/core'
 import type { TemplateVariables } from './types'
 
-// ============================================================================
-// GitHub Step Summary
-// ============================================================================
-
 interface SummaryOptions {
 	changelog?: string
 	codename?: string
@@ -19,10 +15,6 @@ export async function writeStepSummary(variables: TemplateVariables, options: Su
 	const markdown = buildSummaryMarkdown(variables, options)
 	await core.summary.addRaw(markdown).write()
 }
-
-// ============================================================================
-// Markdown Builder
-// ============================================================================
 
 function buildSummaryMarkdown(variables: TemplateVariables, options: SummaryOptions): string {
 	const lines: string[] = []

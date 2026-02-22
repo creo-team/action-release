@@ -1,7 +1,3 @@
-// ============================================================================
-// Bump Types
-// ============================================================================
-
 export type BumpType = 'major' | 'minor' | 'none' | 'patch'
 
 export const BUMP_PRIORITY: Record<BumpType, number> = {
@@ -10,10 +6,6 @@ export const BUMP_PRIORITY: Record<BumpType, number> = {
 	none: 0,
 	patch: 1,
 }
-
-// ============================================================================
-// Version
-// ============================================================================
 
 export interface SemVer {
 	major: number
@@ -24,28 +16,12 @@ export interface SemVer {
 
 export type TagStrategy = 'all' | 'full-and-minor' | 'full'
 
-// ============================================================================
-// Tags
-// ============================================================================
-
 export type VersionSource = 'auto' | 'file' | 'package-json'
-
-// ============================================================================
-// Pre-release Channels
-// ============================================================================
 
 export const STABLE_CHANNEL = 'stable'
 
-// ============================================================================
-// Release Controls
-// ============================================================================
-
 export type IfExistsBehavior = 'fail' | 'skip' | 'update'
 export type LlmContext = 'both' | 'commits' | 'diff'
-
-// ============================================================================
-// LLM
-// ============================================================================
 
 export type LlmProvider = 'anthropic' | 'openai' | 'openrouter'
 export type MakeLatest = 'false' | 'legacy' | 'true'
@@ -67,10 +43,6 @@ export const DEFAULT_LLM_MAX_TOKENS = 1024
 export const DEFAULT_LLM_PROMPT = `Write release notes from the commit history. Be clear and concise.
 Sections: What's New, Fixes, Other (omit empty). Bullet points. Under 200 words.
 Put breaking changes first with a brief warning. Professional tone.`
-
-// ============================================================================
-// Codename Themes
-// ============================================================================
 
 export interface ActionConfig {
 	appendBody: boolean
@@ -157,24 +129,12 @@ export interface ActionConfig {
 	workingDirectory: string
 }
 
-// ============================================================================
-// Bump Source
-// ============================================================================
-
 export interface BumpResult {
 	reason: string
 	type: BumpType
 }
 
-// ============================================================================
-// Previous Release Strategy
-// ============================================================================
-
 export type BumpSource = 'all' | 'commits' | 'pr-body' | 'pr-title'
-
-// ============================================================================
-// Notification Providers
-// ============================================================================
 
 export type CodenameTheme =
 	| 'adjective-animal'
@@ -186,10 +146,6 @@ export type CodenameTheme =
 	| 'ships'
 	| 'the-office'
 
-// ============================================================================
-// Action Config (parsed inputs)
-// ============================================================================
-
 export interface NotificationConfig {
 	discordWebhook?: string
 	genericWebhookUrl?: string
@@ -198,15 +154,7 @@ export interface NotificationConfig {
 	template?: string
 }
 
-// ============================================================================
-// Template Variables
-// ============================================================================
-
 export type PreviousReleaseStrategy = 'latest-release' | 'latest-tag' | 'specific-tag' | 'tag-pattern'
-
-// ============================================================================
-// Results
-// ============================================================================
 
 export interface ReleaseResult {
 	created: boolean
@@ -238,10 +186,6 @@ export interface TemplateVariables {
 	tag: string
 	version: string
 }
-
-// ============================================================================
-// Defaults
-// ============================================================================
 
 export const DEFAULT_INITIAL_VERSION = '0.1.0'
 export const DEFAULT_TAG_PREFIX = ''

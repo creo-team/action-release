@@ -2,10 +2,6 @@ import type * as github from '@actions/github'
 import { compareSemVer, parseSemVer } from './version'
 import type { PreviousReleaseStrategy } from './types'
 
-// ============================================================================
-// Previous Release Detection
-// ============================================================================
-
 type Octokit = ReturnType<typeof github.getOctokit>
 
 export async function findPreviousTag(
@@ -31,10 +27,6 @@ export async function findPreviousTag(
 			return findTagByPattern(octokit, owner, repo, options.matchPattern ?? '*')
 	}
 }
-
-// ============================================================================
-// Strategies
-// ============================================================================
 
 async function findLatestRelease(octokit: Octokit, owner: string, repo: string): Promise<null | string> {
 	try {
@@ -108,10 +100,6 @@ async function findTagByPattern(
 
 	return matching[0]
 }
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function globToRegex(pattern: string): RegExp {
 	const escaped = pattern

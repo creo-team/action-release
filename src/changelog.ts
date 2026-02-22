@@ -1,7 +1,3 @@
-// ============================================================================
-// Conventional Changelog Generation
-// ============================================================================
-
 interface ChangelogSection {
 	title: string
 	types: string[]
@@ -30,10 +26,6 @@ interface ParsedCommit {
 
 const COMMIT_REGEX = /^(\w+)(?:\(([^)]+)\))?(!)?:\s*(.+)/
 
-// ============================================================================
-// Parsing
-// ============================================================================
-
 export function formatRawChanges(commitMessages: string[], commitHashes?: string[]): string {
 	return commitMessages
 		.map((msg, i) => {
@@ -44,10 +36,6 @@ export function formatRawChanges(commitMessages: string[], commitHashes?: string
 		})
 		.join('\n')
 }
-
-// ============================================================================
-// Generation
-// ============================================================================
 
 export function generateChangelog(commitMessages: string[], commitHashes?: string[]): string {
 	const parsed: ParsedCommit[] = []
@@ -100,10 +88,6 @@ export function generateChangelog(commitMessages: string[], commitHashes?: strin
 
 	return sections.join('\n\n')
 }
-
-// ============================================================================
-// Raw Changes (non-conventional)
-// ============================================================================
 
 export function parseCommitMessage(message: string): null | ParsedCommit {
 	const firstLine = message.split('\n')[0].trim()

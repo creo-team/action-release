@@ -2,10 +2,6 @@ import * as core from '@actions/core'
 import type { LlmProvider } from './types'
 import { DEFAULT_LLM_PROMPT, LLM_DEFAULT_MODELS, LLM_ENDPOINTS } from './types'
 
-// ============================================================================
-// LLM Release Notes Generation
-// ============================================================================
-
 export interface LlmInput {
 	commitMessages: string[]
 	diff?: string
@@ -21,10 +17,6 @@ export interface LlmOptions {
 	provider: LlmProvider
 	systemPrompt?: string
 }
-
-// ============================================================================
-// Main Entry Point
-// ============================================================================
 
 export async function generateLlmReleaseNotes(options: LlmOptions, input: LlmInput): Promise<string> {
 	const model = options.model ?? LLM_DEFAULT_MODELS[options.provider]
@@ -56,10 +48,6 @@ export async function generateLlmReleaseNotes(options: LlmOptions, input: LlmInp
 		return ''
 	}
 }
-
-// ============================================================================
-// Prompt Construction
-// ============================================================================
 
 function buildUserPrompt(input: LlmInput): string {
 	const parts: string[] = [
@@ -97,10 +85,6 @@ interface AnthropicResponse {
 		message?: string
 	}
 }
-
-// ============================================================================
-// OpenAI-Compatible API (OpenAI + OpenRouter)
-// ============================================================================
 
 interface OpenAIResponse {
 	choices?: {
@@ -153,10 +137,6 @@ async function callAnthropic(
 
 	return textBlock?.text?.trim() ?? ''
 }
-
-// ============================================================================
-// Anthropic API
-// ============================================================================
 
 async function callOpenAICompatible(
 	endpoint: string,

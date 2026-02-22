@@ -3,10 +3,6 @@ import { adjectives, animals, colors, uniqueNamesGenerator } from 'unique-names-
 import type { CodenameTheme } from './types'
 import { MAX_CODENAME_RETRIES } from './types'
 
-// ============================================================================
-// Theme Word Lists
-// ============================================================================
-
 const THE_OFFICE_NAMES = [
 	'Threat Level Midnight',
 	'Prison Mike',
@@ -172,10 +168,6 @@ const SHIP_NAMES = [
 	'Leviathan',
 ]
 
-// ============================================================================
-// Generation
-// ============================================================================
-
 export function generateCodename(theme: CodenameTheme, existingNames: string[], customWords?: string[]): string {
 	if (theme === 'off') return ''
 
@@ -249,10 +241,6 @@ function generateCandidate(theme: CodenameTheme, customWords?: string[]): string
 			return pickRandom(THE_OFFICE_NAMES)
 	}
 }
-
-// ============================================================================
-// Fetch Existing Release Names
-// ============================================================================
 
 function pickRandom(list: string[]): string {
 	if (list.length === 0) return 'Unknown'

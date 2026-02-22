@@ -20,7 +20,6 @@ Instructions for AI coding agents (Claude Code, Cursor, Copilot, etc.) working i
 - Functions under 50 lines, prefer early returns
 - No `any` — prefer `unknown` and narrow with type guards
 - `null` for intentionally empty, `undefined` for "not provided"
-- Section headers: `// ============================================================================`
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 
 ## Key Files

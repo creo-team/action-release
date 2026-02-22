@@ -2,10 +2,6 @@ import * as core from '@actions/core'
 import type * as github from '@actions/github'
 import type { IfExistsBehavior, MakeLatest, ReleaseResult } from './types'
 
-// ============================================================================
-// GitHub Release Operations
-// ============================================================================
-
 export interface CreateReleaseOptions {
 	body: string
 	discussionCategory?: string
@@ -28,15 +24,7 @@ interface ExistingRelease {
 	url: string
 }
 
-// ============================================================================
-// Create Release
-// ============================================================================
-
 type Octokit = ReturnType<typeof github.getOctokit>
-
-// ============================================================================
-// Create New
-// ============================================================================
 
 export async function createRelease(octokit: Octokit, options: CreateReleaseOptions): Promise<ReleaseResult> {
 	const existing = await findExistingRelease(octokit, options.owner, options.repo, options.tag)
@@ -47,10 +35,6 @@ export async function createRelease(octokit: Octokit, options: CreateReleaseOpti
 
 	return createNewRelease(octokit, options)
 }
-
-// ============================================================================
-// Handle Existing
-// ============================================================================
 
 async function createNewRelease(octokit: Octokit, options: CreateReleaseOptions): Promise<ReleaseResult> {
 	core.info(`Creating release ${options.tag}`)
@@ -121,10 +105,6 @@ async function handleExisting(
 	}
 }
 
-// ============================================================================
-// Find Existing
-// ============================================================================
-
 async function updateExistingRelease(
 	octokit: Octokit,
 	options: CreateReleaseOptions,
@@ -151,10 +131,6 @@ async function updateExistingRelease(
 		url: data.html_url,
 	}
 }
-
-// ============================================================================
-// Tag Operations
-// ============================================================================
 
 const REF_ALREADY_EXISTS = 'Reference already exists'
 const REF_UPDATE_FAILED = 'Reference update failed'

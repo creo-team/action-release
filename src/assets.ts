@@ -4,10 +4,6 @@ import type * as github from '@actions/github'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// ============================================================================
-// Asset Upload
-// ============================================================================
-
 export interface UploadAssetsOptions {
 	failOnUnmatched: boolean
 	overwrite: boolean
@@ -55,10 +51,6 @@ export async function uploadAssets(octokit: Octokit, options: UploadAssetsOption
 	return uploaded
 }
 
-// ============================================================================
-// File Resolution
-// ============================================================================
-
 async function deleteExistingAssets(octokit: Octokit, options: UploadAssetsOptions, newFiles: string[]): Promise<void> {
 	const newNames = new Set(newFiles.map((f) => path.basename(f)))
 
@@ -80,10 +72,6 @@ async function deleteExistingAssets(octokit: Octokit, options: UploadAssetsOptio
 	}
 }
 
-// ============================================================================
-// Upload
-// ============================================================================
-
 async function resolveFiles(patterns: string, workingDirectory: string): Promise<string[]> {
 	const lines = patterns
 		.split('\n')
@@ -97,10 +85,6 @@ async function resolveFiles(patterns: string, workingDirectory: string): Promise
 
 	return files.filter((f) => fs.statSync(f).isFile())
 }
-
-// ============================================================================
-// Delete Existing (for overwrite)
-// ============================================================================
 
 async function uploadSingleAsset(
 	octokit: Octokit,

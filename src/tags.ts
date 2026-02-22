@@ -1,9 +1,5 @@
 import type { SemVer, TagStrategy } from './types'
 
-// ============================================================================
-// Tag Generation
-// ============================================================================
-
 export function buildCompareUrl(owner: string, repo: string, previousTag: string, newTag: string): string {
 	return `https://github.com/${owner}/${repo}/compare/${previousTag}...${newTag}`
 }
@@ -16,20 +12,12 @@ export function formatMinorTag(version: SemVer, prefix: string, suffix: string):
 	return `${prefix}${version.major}.${version.minor}${suffix}`
 }
 
-// ============================================================================
-// Strategy
-// ============================================================================
-
 export function formatTag(version: SemVer, prefix: string, suffix = ''): string {
 	const base = `${version.major}.${version.minor}.${version.patch}`
 	const versionStr = version.prerelease ? `${base}-${version.prerelease}` : base
 
 	return `${prefix}${versionStr}${suffix}`
 }
-
-// ============================================================================
-// Parsing
-// ============================================================================
 
 export function getTagsForStrategy(version: SemVer, prefix: string, strategy: TagStrategy, suffix = ''): string[] {
 	const fullTag = formatTag(version, prefix, suffix)

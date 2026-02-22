@@ -1,10 +1,6 @@
 import * as fs from 'fs'
 import type { SemVer } from './types'
 
-// ============================================================================
-// Parsing
-// ============================================================================
-
 const SEMVER_REGEX = /^v?(\d+)\.(\d+)\.(\d+)(?:-([\w.]+))?$/
 
 export function applyChannel(version: SemVer, channel: string, prereleaseNumber: number): SemVer {
@@ -36,27 +32,15 @@ export function compareSemVer(a: SemVer, b: SemVer): number {
 	return a.patch - b.patch
 }
 
-// ============================================================================
-// Bump
-// ============================================================================
-
 export function formatSemVer(version: SemVer): string {
 	const base = `${version.major}.${version.minor}.${version.patch}`
 
 	return version.prerelease ? `${base}-${version.prerelease}` : base
 }
 
-// ============================================================================
-// Channel (pre-release)
-// ============================================================================
-
 export function isValidSemVer(version: string): boolean {
 	return parseSemVer(version) !== null
 }
-
-// ============================================================================
-// Version Sources
-// ============================================================================
 
 export function parseSemVer(version: string): null | SemVer {
 	const match = SEMVER_REGEX.exec(version.trim())
@@ -86,10 +70,6 @@ export function readVersionFromFile(filePath: string, pattern: string): string {
 
 	return version
 }
-
-// ============================================================================
-// Compare
-// ============================================================================
 
 export function readVersionFromPackageJson(path: string): string {
 	const content = fs.readFileSync(path, 'utf-8')

@@ -2,10 +2,6 @@ import * as core from '@actions/core'
 import type { NotificationConfig, TemplateVariables } from './types'
 import { renderTemplate } from './template'
 
-// ============================================================================
-// Notification Dispatcher
-// ============================================================================
-
 const DEFAULT_NOTIFICATION_TEMPLATE = '🚀 *{{repo}}* {{tag}} released! {{release_url}}'
 
 export async function sendNotifications(config: NotificationConfig, variables: TemplateVariables): Promise<void> {
@@ -38,10 +34,6 @@ export async function sendNotifications(config: NotificationConfig, variables: T
 	}
 }
 
-// ============================================================================
-// Slack
-// ============================================================================
-
 async function postWebhook(url: string, payload: unknown, provider: string): Promise<void> {
 	const response = await fetch(url, {
 		body: JSON.stringify(payload),
@@ -55,10 +47,6 @@ async function postWebhook(url: string, payload: unknown, provider: string): Pro
 
 	core.info(`${provider} notification sent`)
 }
-
-// ============================================================================
-// Discord
-// ============================================================================
 
 async function sendDiscord(webhookUrl: string, message: string, variables: TemplateVariables): Promise<void> {
 	const payload = {
@@ -80,17 +68,9 @@ async function sendDiscord(webhookUrl: string, message: string, variables: Templ
 	await postWebhook(webhookUrl, payload, 'Discord')
 }
 
-// ============================================================================
-// Microsoft Teams
-// ============================================================================
-
 async function sendGenericWebhook(url: string, variables: TemplateVariables): Promise<void> {
 	await postWebhook(url, variables, 'Generic webhook')
 }
-
-// ============================================================================
-// Generic Webhook
-// ============================================================================
 
 async function sendSlack(webhookUrl: string, message: string, variables: TemplateVariables): Promise<void> {
 	const payload = {
@@ -117,10 +97,6 @@ async function sendSlack(webhookUrl: string, message: string, variables: Templat
 
 	await postWebhook(webhookUrl, payload, 'Slack')
 }
-
-// ============================================================================
-// HTTP Post
-// ============================================================================
 
 async function sendTeams(webhookUrl: string, message: string, variables: TemplateVariables): Promise<void> {
 	const payload = {

@@ -1,19 +1,11 @@
 import * as fs from 'fs'
 
-// ============================================================================
-// Changelog File Update
-// ============================================================================
-
 const CHANGELOG_HEADER = '# Changelog\n\nAll notable changes to this project will be documented in this file.\n'
 const CHANGELOG_SEPARATOR = '\n---\n\n'
 
 export function formatChangelogEntry(version: string, date: string, content: string): string {
 	return `## [${version}] - ${date}\n\n${content}\n`
 }
-
-// ============================================================================
-// Formatting
-// ============================================================================
 
 export function updateChangelogFile(filePath: string, version: string, date: string, changelogContent: string): void {
 	const entry = formatChangelogEntry(version, date, changelogContent)

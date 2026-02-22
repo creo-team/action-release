@@ -1,10 +1,6 @@
 import type { BumpResult, BumpType } from './types'
 import { BUMP_PRIORITY } from './types'
 
-// ============================================================================
-// Conventional Commit Parsing
-// ============================================================================
-
 const CONVENTIONAL_COMMIT_REGEX = /^(\w+)(?:\([\w-]+\))?(!)?:\s/
 
 const BREAKING_CHANGE_FOOTER = 'BREAKING CHANGE'
@@ -41,10 +37,6 @@ export function detectBumpFromMessages(
 	}
 }
 
-// ============================================================================
-// Keyword Matching
-// ============================================================================
-
 export function detectConventionalBump(message: string): BumpType {
 	const match = CONVENTIONAL_COMMIT_REGEX.exec(message)
 
@@ -55,10 +47,6 @@ export function detectConventionalBump(message: string): BumpType {
 
 	return 'none'
 }
-
-// ============================================================================
-// Aggregate Bump Detection
-// ============================================================================
 
 export function detectKeywordBump(
 	text: string,

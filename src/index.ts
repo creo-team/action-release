@@ -25,10 +25,6 @@ import { writeStepSummary } from './summary'
 import type { SemVer } from './types'
 import { SHORT_SHA_LENGTH, STABLE_CHANNEL } from './types'
 
-// ============================================================================
-// Main
-// ============================================================================
-
 function collectBumpTexts(bumpSource: string, messages: string[]): string[] {
 	const context = github.context
 
@@ -57,10 +53,6 @@ function collectBumpTexts(bumpSource: string, messages: string[]): string[] {
 			return messages
 	}
 }
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 async function getCommitData(
 	octokit: ReturnType<typeof github.getOctokit>,
@@ -143,10 +135,6 @@ async function run(): Promise<void> {
 	const { owner, repo } = github.context.repo
 	const sha = github.context.sha
 
-	// ============================================================================
-	// 1. Find previous release
-	// ============================================================================
-
 	const previousTag = await findPreviousTag(octokit, owner, repo, config.previousReleaseStrategy, {
 		matchPattern: config.tagMatchPattern,
 		specificTag: config.previousTag,
@@ -156,10 +144,6 @@ async function run(): Promise<void> {
 
 	core.info(previousTag ? `Previous tag: ${previousTag}` : 'No previous tag found')
 
-	// ============================================================================
-	// 2. Collect commits since previous tag
-	// ============================================================================
-
 	const { diff, hashes, messages } = await getCommitData(
 		octokit,
 		owner,
@@ -168,10 +152,6 @@ async function run(): Promise<void> {
 		previousTag,
 		config.llmContext === 'diff' || config.llmContext === 'both',
 	)
-
-	// ============================================================================
-	// 3. Resolve version
-	// ============================================================================
 
 	let version: SemVer
 
@@ -236,10 +216,6 @@ async function run(): Promise<void> {
 			}
 		}
 
-	// ============================================================================
-	// 4. Apply channel (pre-release)
-	// ============================================================================
-
 	if (config.channel !== STABLE_CHANNEL) {
 		const channelNumber = await getNextChannelNumber(
 			octokit,
@@ -260,17 +236,9 @@ async function run(): Promise<void> {
 	core.info(`Version: ${versionStr}`)
 	core.info(`Tags: ${tags.join(', ')}`)
 
-	// ============================================================================
-	// 5. Generate changelog
-	// ============================================================================
-
 	const changelogMd = config.changelog ? generateChangelog(messages, hashes) : ''
 
 	const rawChanges = formatRawChanges(messages, hashes)
-
-	// ============================================================================
-	// 6. Generate codename
-	// ============================================================================
 
 	let codename = ''
 	if (config.codename !== 'off') {
@@ -278,10 +246,6 @@ async function run(): Promise<void> {
 		codename = generateCodename(config.codename, existingNames, config.codenameWords)
 		core.info(`Codename: ${codename}`)
 	}
-
-	// ============================================================================
-	// 7. Generate LLM summary
-	// ============================================================================
 
 	let llmSummary = ''
 	if (config.llmReleaseNotes && config.llmApiKey) {
@@ -302,10 +266,6 @@ async function run(): Promise<void> {
 			},
 		)
 	}
-
-	// ============================================================================
-	// 8. Build template variables
-	// ============================================================================
 
 	const compareUrl = previousTag ? buildCompareUrl(owner, repo, previousTag, primaryTag) : ''
 
@@ -332,10 +292,6 @@ async function run(): Promise<void> {
 		version: versionStr,
 	})
 
-	// ============================================================================
-	// 9. Build release body
-	// ============================================================================
-
 	const DEFAULT_BODY_TEMPLATE = "## What's Changed\n\n{{changelog}}\n\n**Full Changelog**: {{compare_url}}"
 
 	let body = ''
@@ -350,10 +306,6 @@ async function run(): Promise<void> {
 		body = renderTemplate(DEFAULT_BODY_TEMPLATE, templateVars)
 	}
 
-	// ============================================================================
-	// 10. Build release name
-	// ============================================================================
-
 	let releaseName: string
 	if (config.name) {
 		releaseName = renderTemplate(config.name, templateVars)
@@ -364,10 +316,6 @@ async function run(): Promise<void> {
 	}
 
 	templateVars.release_name = releaseName
-
-	// ============================================================================
-	// 11. Dry run check
-	// ============================================================================
 
 	if (config.dryRun) {
 		core.info('Dry run — no tags or releases will be created')
@@ -398,17 +346,9 @@ async function run(): Promise<void> {
 		return
 	}
 
-	// ============================================================================
-	// 12. Create tags
-	// ============================================================================
-
 	for (const tag of tags) {
 		await createOrUpdateTag(octokit, owner, repo, tag, sha)
 	}
-
-	// ============================================================================
-	// 13. Create release
-	// ============================================================================
 
 	const releaseResult = await createRelease(octokit, {
 		body,
@@ -427,10 +367,6 @@ async function run(): Promise<void> {
 
 	templateVars.release_url = releaseResult.url
 
-	// ============================================================================
-	// 14. Upload assets
-	// ============================================================================
-
 	let uploadedAssets: string[] = []
 	if (config.files) {
 		uploadedAssets = await uploadAssets(octokit, {
@@ -444,19 +380,11 @@ async function run(): Promise<void> {
 		})
 	}
 
-	// ============================================================================
-	// 15. Update changelog file
-	// ============================================================================
-
 	if (config.updateChangelog) {
 		const changelogContent = changelogMd || rawChanges
 		updateChangelogFile(config.changelogPath, versionStr, templateVars.date, changelogContent)
 		core.info(`Updated ${config.changelogPath}`)
 	}
-
-	// ============================================================================
-	// 16. Send notifications
-	// ============================================================================
 
 	const hasNotifications = [
 		config.notifications.slackWebhook,
@@ -469,10 +397,6 @@ async function run(): Promise<void> {
 		await sendNotifications(config.notifications, templateVars)
 	}
 
-	// ============================================================================
-	// 17. Write step summary
-	// ============================================================================
-
 	await writeStepSummary(templateVars, {
 		changelog: changelogMd ? changelogMd : undefined,
 		codename: codename ? codename : undefined,
@@ -482,10 +406,6 @@ async function run(): Promise<void> {
 		tags,
 		uploadedAssets: uploadedAssets.length > 0 ? uploadedAssets : undefined,
 	})
-
-	// ============================================================================
-	// 18. Set outputs
-	// ============================================================================
 
 	setOutputs(
 		primaryTag,
@@ -551,10 +471,6 @@ function setSkippedOutputs(): void {
 	core.setOutput('tag', '')
 	core.setOutput('version', '')
 }
-
-// ============================================================================
-// Entry
-// ============================================================================
 
 run().catch((error: unknown) => {
 	const message = error instanceof Error ? error.message : String(error)

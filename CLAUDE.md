@@ -32,7 +32,6 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - **Configuration** → named constants (e.g. `DEFAULT_INITIAL_VERSION`, `MAX_LLM_TOKENS`)
 - Functions under 50 lines, prefer early returns over nested conditionals
 - `null` for intentionally empty values, `undefined` for "not provided"
-- Section headers with `// ============================================================================`
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 
 ### TypeScript
