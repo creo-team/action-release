@@ -19,7 +19,7 @@ import { updateChangelogFile } from './changelog-file'
 import { generateCodename, getExistingReleaseNames } from './codename'
 import { generateLlmReleaseNotes } from './llm'
 import { buildActionFooter } from './action-footer'
-import { createOrUpdateTag, createRelease } from './release'
+import { createOrUpdateTag, createRelease, findExistingRelease } from './release'
 import { uploadAssets } from './assets'
 import { sendNotifications } from './notifications'
 import { writeStepSummary } from './summary'
@@ -349,6 +349,43 @@ async function run(): Promise<void> {
 		})
 
 		return
+	}
+
+	if (config.ifExists === 'skip') {
+		const existing = await findExistingRelease(octokit, owner, repo, primaryTag)
+		if (existing) {
+			core.info(`Release ${primaryTag} already exists and if-exists is "skip" — skipping tags and release`)
+
+			templateVars.release_url = existing.url
+			setOutputs(
+				primaryTag,
+				versionStr,
+				version,
+				tags,
+				previousTag,
+				compareUrl,
+				codename,
+				releaseName,
+				changelogMd,
+				llmSummary,
+				body,
+				false,
+				false,
+				existing.url,
+				existing.id,
+				existing.uploadUrl,
+			)
+			await writeStepSummary(templateVars, {
+				changelog: changelogMd ? changelogMd : undefined,
+				codename: codename ? codename : undefined,
+				created: false,
+				dryRun: false,
+				llmSummary: llmSummary ? llmSummary : undefined,
+				tags,
+			})
+
+			return
+		}
 	}
 
 	for (const tag of tags) {

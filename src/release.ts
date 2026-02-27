@@ -62,7 +62,7 @@ async function createNewRelease(octokit: Octokit, options: CreateReleaseOptions)
 	}
 }
 
-async function findExistingRelease(
+export async function findExistingRelease(
 	octokit: Octokit,
 	owner: string,
 	repo: string,
@@ -187,6 +187,12 @@ export async function createOrUpdateTag(
 					: typeof createErr === 'string'
 						? createErr
 						: 'Unknown error'
+
+			if (message.includes(REF_UPDATE_FAILED)) {
+				core.info(`Tag ${tag} exists but cannot be updated — skipping`)
+
+				return
+			}
 
 			if (message.includes(REF_ALREADY_EXISTS)) {
 				try {

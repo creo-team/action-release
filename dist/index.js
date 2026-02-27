@@ -64296,6 +64296,23 @@ async function run() {
         });
         return;
     }
+    if (config.ifExists === 'skip') {
+        const existing = await (0, release_1.findExistingRelease)(octokit, owner, repo, primaryTag);
+        if (existing) {
+            core.info(`Release ${primaryTag} already exists and if-exists is "skip" — skipping tags and release`);
+            templateVars.release_url = existing.url;
+            setOutputs(primaryTag, versionStr, version, tags, previousTag, compareUrl, codename, releaseName, changelogMd, llmSummary, body, false, false, existing.url, existing.id, existing.uploadUrl);
+            await (0, summary_1.writeStepSummary)(templateVars, {
+                changelog: changelogMd ? changelogMd : undefined,
+                codename: codename ? codename : undefined,
+                created: false,
+                dryRun: false,
+                llmSummary: llmSummary ? llmSummary : undefined,
+                tags,
+            });
+            return;
+        }
+    }
     for (const tag of tags) {
         await (0, release_1.createOrUpdateTag)(octokit, owner, repo, tag, sha);
     }
@@ -65022,6 +65039,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRelease = createRelease;
+exports.findExistingRelease = findExistingRelease;
 exports.createOrUpdateTag = createOrUpdateTag;
 const core = __importStar(__nccwpck_require__(7484));
 async function createRelease(octokit, options) {
@@ -65147,6 +65165,10 @@ async function createOrUpdateTag(octokit, owner, repo, tag, sha) {
                 : typeof createErr === 'string'
                     ? createErr
                     : 'Unknown error';
+            if (message.includes(REF_UPDATE_FAILED)) {
+                core.info(`Tag ${tag} exists but cannot be updated — skipping`);
+                return;
+            }
             if (message.includes(REF_ALREADY_EXISTS)) {
                 try {
                     await octokit.rest.git.updateRef({
