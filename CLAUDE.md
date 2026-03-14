@@ -46,7 +46,7 @@ Reusable GitHub Action for automated releases. TypeScript compiled to a single `
 - **Generators when appropriate** — use generator functions for iteration and lazy evaluation where they simplify the code
 - Functions under 50 lines — if it's longer, extract
 - `null` for intentionally empty values, `undefined` for "not provided"
-- **Version bumps** — increment `package.json` version with every push to `main`. Feature branches: one bump before merge
+- **Version bumps** — increment `package.json` version with every commit. Patch for fixes, minor for features, major for breaking changes
 - Conventional commits: `feat(scope):`, `fix(scope):`, `refactor(scope):`
 
 ### Documentation Standards
