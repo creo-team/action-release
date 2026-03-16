@@ -64,6 +64,10 @@ inputs:
     description: 'full (v1.0.9 only), all (v1, v1.0, v1.0.9), or full-and-minor.'
     required: false
     default: 'full'
+  floating-tags:
+    description: 'When true, publish major, minor, and patch tags (e.g. 1, 1.0, 1.0.9). Shorthand for tag-strategy: all. Overrides tag-strategy.'
+    required: false
+    default: 'false'
 
   # ============================================================================
   # Pre-release Channels

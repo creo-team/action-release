@@ -126,6 +126,18 @@ describe('stripSuffix', () => {
 	})
 })
 
+describe('floating tags (all strategy, no prefix)', () => {
+	it('produces patch, minor, and major tags for a new project', () => {
+		const v: SemVer = { major: 1, minor: 0, patch: 0 }
+		expect(getTagsForStrategy(v, '', 'all')).toEqual(['1.0.0', '1.0', '1'])
+	})
+
+	it('produces patch, minor, and major tags for later versions', () => {
+		const v: SemVer = { major: 2, minor: 3, patch: 1 }
+		expect(getTagsForStrategy(v, '', 'all')).toEqual(['2.3.1', '2.3', '2'])
+	})
+})
+
 describe('buildCompareUrl', () => {
 	it('builds correct compare URL', () => {
 		expect(buildCompareUrl('owner', 'repo', 'v1.0.0', 'v1.1.0')).toBe(

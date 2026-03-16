@@ -64495,7 +64495,10 @@ function parseInputs() {
     const versionSource = validateEnum(core.getInput('version-source'), VALID_VERSION_SOURCES, 'version-source');
     const defaultBump = validateEnum(core.getInput('default-bump'), VALID_BUMP_TYPES, 'default-bump');
     const bumpSource = validateEnum(core.getInput('bump-source'), VALID_BUMP_SOURCES, 'bump-source');
-    const tagStrategy = validateEnum(core.getInput('tag-strategy'), VALID_TAG_STRATEGIES, 'tag-strategy');
+    const floatingTags = parseBool(core.getInput('floating-tags'));
+    const tagStrategy = floatingTags
+        ? 'all'
+        : validateEnum(core.getInput('tag-strategy'), VALID_TAG_STRATEGIES, 'tag-strategy');
     const ifExists = validateEnum(core.getInput('if-exists'), VALID_IF_EXISTS, 'if-exists');
     const makeLatest = validateEnum(core.getInput('make-latest'), VALID_MAKE_LATEST, 'make-latest');
     const llmProvider = validateEnum(core.getInput('llm-provider'), VALID_LLM_PROVIDERS, 'llm-provider');

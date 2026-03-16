@@ -79,7 +79,10 @@ export function parseInputs(): ActionConfig {
 
 	const bumpSource = validateEnum(core.getInput('bump-source'), VALID_BUMP_SOURCES, 'bump-source')
 
-	const tagStrategy = validateEnum(core.getInput('tag-strategy'), VALID_TAG_STRATEGIES, 'tag-strategy')
+	const floatingTags = parseBool(core.getInput('floating-tags'))
+	const tagStrategy: TagStrategy = floatingTags
+		? 'all'
+		: validateEnum(core.getInput('tag-strategy'), VALID_TAG_STRATEGIES, 'tag-strategy')
 
 	const ifExists = validateEnum(core.getInput('if-exists'), VALID_IF_EXISTS, 'if-exists')
 

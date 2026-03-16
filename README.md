@@ -88,6 +88,18 @@ Check the **Summary** tab in the Actions run — you'll see the version, tag, an
     dry-run: true
 ```
 
+### Floating tags (1, 1.0, 1.0.9)
+
+Publish all three tag levels so consumers can pin to a major or minor:
+
+```yaml
+- uses: creo-team/action-release@v1
+  with:
+    floating-tags: true
+```
+
+`floating-tags: true` overrides `tag-strategy`. Equivalent to `tag-strategy: all` but cleaner to read.
+
 ### Tag strategy: v1, v1.0, v1.0.9 (for actions/libraries)
 
 ```yaml
@@ -137,6 +149,7 @@ GitHub does not expose Marketplace publishing via the API. When `publish-to-mark
 | **Conventional Commits** | Parse `feat:`, `fix:`, `BREAKING CHANGE` | None (built-in) |
 | **Configurable Keywords** | Custom keyword lists for each bump level | `major-keywords`, `minor-keywords`, `patch-keywords` |
 | **Tag Strategies** | Publish `v1`, `v1.0`, `v1.0.9` — any combination | `tag-strategy` |
+| **Floating Tags** | Boolean shorthand to publish all three tag levels | `floating-tags: true` |
 | **Pre-release Channels** | `alpha`, `beta`, `rc` with auto-incrementing | `channel` |
 | **Release Notes Templates** | Mustache-style `{{variables}}` in body | `body-template` |
 | **Conventional Changelog** | Grouped by type (Features, Fixes, etc.) | `changelog: true` |
@@ -574,6 +587,7 @@ Set `if-exists` to control behavior:
 | `default-bump` | `patch` | Fallback when no keywords match |
 | `tag-prefix` | `v` | Tag prefix. Empty for none. |
 | `tag-strategy` | `full` | `full`, `all`, `full-and-minor` |
+| `floating-tags` | `false` | Publish major, minor, and patch tags. Overrides `tag-strategy`. |
 | `channel` | `stable` | `stable`, `alpha`, `beta`, `rc`, or custom |
 | `changelog` | `false` | Generate changelog and set release body |
 | `llm-release-notes` | `false` | Enable LLM notes |
