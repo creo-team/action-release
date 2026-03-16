@@ -4,7 +4,6 @@ run-name: Release · ${{ github.ref_name }}
 on:
   push:
     branches: [main]
-    paths: [package.json]
   workflow_dispatch:
 
 permissions:
@@ -29,9 +28,9 @@ jobs:
       - name: Release
         uses: ./
         with:
-          version-source: package-json
+          version-source: auto
           tag-prefix: v
-          tag-strategy: all
+          floating-tags: true
           changelog: 'true'
           if-exists: skip
           publish-to-marketplace: true
