@@ -9,7 +9,7 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
           fi
 
   dry-run:
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     needs: ci
     if: github.event_name == 'pull_request'
     permissions:
