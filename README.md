@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -223,7 +223,7 @@ on:
 jobs:
   release:
     if: github.event.pull_request.merged
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     permissions:
       contents: write
     steps:
@@ -492,7 +492,7 @@ permissions:
 jobs:
   release:
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     permissions:
       contents: write
     steps:
@@ -504,7 +504,7 @@ jobs:
   # Preview on PRs — no tags or releases created
   preview:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: creo-latest
     steps:
       - uses: actions/checkout@v4
         with:
